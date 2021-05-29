@@ -105,8 +105,8 @@ async def channel_random_image(channel: str):
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
 
-@app.get("/vrc/all/randomsync")
-async def all_random_sync():
+@app.get("/vrc/{channel}/randomsync")
+async def channel_random_sync(channel: str):
     count = await db.count(Image, Image.channel == channel)
     images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc())
     if images is not None:
