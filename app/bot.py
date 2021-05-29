@@ -48,7 +48,7 @@ async def rescan(ctx, limit: int = 100):
     count = 0
     await ctx.message.delete()
     response = await ctx.send(f"Rescanning the last {limit} messages for images")
-    async for message in ctx.channel.history(limit=limit + 2):
+    async for message in ctx.channel.history(limit=limit+2, oldest_first=True):
         count += 1 if await check_attachments(message) else 0
     await response.delete()
     response = await ctx.send(f"Rescan complete, added {count} images")
