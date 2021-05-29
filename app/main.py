@@ -1,8 +1,10 @@
+import random
 import asyncio
 import uvicorn
 
 from model import Image
 from config import DB_CONF
+from datetime import datetime
 from urllib.parse import quote_plus
 
 from fastapi import FastAPI
@@ -31,24 +33,24 @@ async def root():
     return {"Message": "Nothing to see here"}
 
 @app.get("/api/all/count")
-async def count():
+async def all_count():
     count = await db.count(Image)
     return count
 
 @app.get("/api/{channel}/count")
-async def count(channel: str):
+async def channel_count(channel: str):
     count = await db.count(Image.channel == channel)
     return count
 
 @app.get("/vrc/all/latest")
-async def latest():
+async def all_latest():
     image = await db.find_one(Image, sort = Image.created_at.desc())
     if image is not None:
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/random")
-async def random():
+async def all_random_image():
     images = db.get_collection(Image)
     result = await images.aggregate([{"$sample": { "size": 1 }}]).to_list(length=1)
     image = Image.parse_doc(result[0])
@@ -57,8 +59,19 @@ async def random():
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
 
+@app.get("/vrc/all/randomsync")
+async def all_random_sync():
+    count = await db.count(Image)
+    images = await db.find(Image, sort = Image.created_at.desc())
+    if images is not None:
+        seed = int(datetime.now().timestamp() / 5)
+        random.seed(seed)
+        image = images[random.randint(0, count-1)]
+        return RedirectResponse(url="/"+image.filepath)
+    return RedirectResponse(url=placeholder)
+
 @app.get("/vrc/all/desc/{n}")
-async def desc(n: int):
+async def all_desc(n: int):
     images = await db.find(Image, sort = Image.created_at.desc())
     if images is not None and len(images) > n:
         image = images[n]
@@ -66,7 +79,7 @@ async def desc(n: int):
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/asc/{n}")
-async def asc(n: int):
+async def all_asc(n: int):
     images = await db.find(Image, sort = Image.created_at.asc())
     if images is not None and len(images) > n:
         image = images[n]
@@ -74,14 +87,14 @@ async def asc(n: int):
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{channel}/latest")
-async def latest(channel: str):
+async def channel_latest(channel: str):
     image = await db.find_one(Image, Image.channel == channel, sort = Image.created_at.desc())
     if image is not None:
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{channel}/random")
-async def random(channel: str):
+async def channel_random_image(channel: str):
     images = db.get_collection(Image)
     result = await images.aggregate([
         {"$sample": { "size": 1 }},
@@ -92,8 +105,19 @@ async def random(channel: str):
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
 
+@app.get("/vrc/all/randomsync")
+async def all_random_sync():
+    count = await db.count(Image, Image.channel == channel)
+    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc())
+    if images is not None:
+        seed = int(datetime.now().timestamp() / 5)
+        random.seed(seed)
+        image = images[random.randint(0, count-1)]
+        return RedirectResponse(url="/"+image.filepath)
+    return RedirectResponse(url=placeholder)
+
 @app.get("/vrc/{channel}/desc/{n}")
-async def desc(channel: str, n: int):
+async def channel_desc(channel: str, n: int):
     images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc())
     if images is not None and len(images) > n:
         image = images[n]
@@ -101,7 +125,7 @@ async def desc(channel: str, n: int):
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{channel}/asc/{n}")
-async def asc(channel: str, n: int):
+async def channel_asc(channel: str, n: int):
     images = await db.find(Image, Image.channel == channel, sort = Image.created_at.asc())
     if images is not None and len(images) > n:
         image = images[n]
@@ -110,4 +134,4 @@ async def asc(channel: str, n: int):
 
 if __name__ == "__main__":
 
-    uvicorn.run(app, host="localhost", port=5000)
+    uvicorn.run(app, host="sternenklar.nyanpa.su", port=5000)

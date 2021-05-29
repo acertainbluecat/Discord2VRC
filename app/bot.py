@@ -86,24 +86,24 @@ async def not_authorized(ctx):
     await response.delete()
 """
 
-async def has_attachments(message):
+async def has_attachments(message) -> bool:
     if len(message.attachments) > 0:
         return True
     return False
 
-async def check_attachments(message):
+async def check_attachments(message) -> bool:
     for attachment in message.attachments:
         for ext in exts:
             if attachment.filename.endswith(ext):
                 return await handle_upload(message, attachment, ext)
 
-async def upload_exists(attachment):
+async def upload_exists(attachment) -> bool:
     image = await db.find_one(Image, Image.attachment_id == attachment.id)
     if image is not None:
         return True
     return False
 
-async def handle_upload(message, attachment, ext):
+async def handle_upload(message, attachment, ext) -> bool:
     uploaded = False
     if await upload_exists(attachment):
         await message.add_reaction(emoji_success)
