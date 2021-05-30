@@ -150,7 +150,8 @@ async def handle_upload(message, attachment) -> bool:
             channel_id = message.channel.id,
             username = message.author.name,
             user_num = message.author.discriminator,
-            user_id = message.author.id
+            user_id = message.author.id,
+            message_id = message.id
         )
         await db.save(image)
         return True

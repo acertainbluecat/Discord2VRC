@@ -1,5 +1,5 @@
 from datetime import datetime
-from odmantic import Model
+from odmantic import Model, Field
 
 class Image(Model):
     filename:       str
@@ -12,4 +12,5 @@ class Image(Model):
     username:       str
     user_num:       str
     user_id:        int
-    created_at:     datetime = datetime.utcnow()
+    message_id:     int
+    created_at:     datetime = Field(default_factory = datetime.utcnow)

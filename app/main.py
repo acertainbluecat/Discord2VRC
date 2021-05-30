@@ -32,15 +32,29 @@ async def startup_event():
 async def root():
     return {"Message": "Nothing to see here"}
 
+# API Endpoints
+
 @app.get("/api/all/count")
 async def all_count():
     count = await db.count(Image)
     return count
 
+@app.get("/api/all/items")
+async def all_count(skip: int = 0, limit: int = 100):
+    images = await db.find(Image, sort = Image.created_at.desc(), skip=skip, limit=limit)
+    return images
+
 @app.get("/api/{channel}/count")
 async def channel_count(channel: str):
     count = await db.count(Image.channel == channel)
     return count
+
+@app.get("/api/{channel}/items")
+async def all_count(skip: int = 0, limit: int = 100):
+    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc(), skip=skip, limit=limit)
+    return images
+
+# Endpoints for VRChat
 
 @app.get("/vrc/all/latest")
 async def all_latest():
