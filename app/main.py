@@ -72,18 +72,16 @@ async def all_random_sync():
 
 @app.get("/vrc/all/desc/{n}")
 async def all_desc(n: int):
-    images = await db.find(Image, sort = Image.created_at.desc())
-    if images is not None and len(images) > n:
-        image = images[n]
-        return RedirectResponse(url="/"+image.filepath)
+    images = await db.find(Image, sort = Image.created_at.desc(), skip=n, limit=1)
+    if images is not None:
+        return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/asc/{n}")
 async def all_asc(n: int):
-    images = await db.find(Image, sort = Image.created_at.asc())
-    if images is not None and len(images) > n:
-        image = images[n]
-        return RedirectResponse(url="/"+image.filepath)
+    images = await db.find(Image, sort = Image.created_at.asc(), skip=n, limit=1)
+    if images is not None:
+        return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{channel}/latest")
@@ -118,18 +116,16 @@ async def channel_random_sync(channel: str):
 
 @app.get("/vrc/{channel}/desc/{n}")
 async def channel_desc(channel: str, n: int):
-    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc())
-    if images is not None and len(images) > n:
-        image = images[n]
-        return RedirectResponse(url="/"+image.filepath)
+    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.desc(), skip=n, limit=1)
+    if images is not None:
+        return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{channel}/asc/{n}")
 async def channel_asc(channel: str, n: int):
-    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.asc())
-    if images is not None and len(images) > n:
-        image = images[n]
-        return RedirectResponse(url="/"+image.filepath)
+    images = await db.find(Image, Image.channel == channel, sort = Image.created_at.asc(), skip=n, limit=1)
+    if images is not None:
+        return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 if __name__ == "__main__":
