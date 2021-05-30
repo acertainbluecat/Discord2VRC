@@ -20,7 +20,7 @@ description = '''A bot that saves images from discord to display in vrchat'''
 bot = commands.Bot(command_prefix='!', description=description)
 db = init_db(DB_CONF)
 exts = [".jpg", ".jpeg", ".png"]
-emoji_success = "✅"
+emoji = {"success": "✅", "loading": "⌛"}
 
 @bot.event
 async def on_ready():
@@ -28,10 +28,13 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, error):
-    await ctx.message.delete()
-    message = await ctx.send(f"Unknown command!")
-    await asyncio.sleep(3)
-    await message.delete()
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.message.delete()
+        message = await ctx.send(f"Unknown command!")
+        await asyncio.sleep(3)
+        await message.delete()
+        return
+    raise error
 
 @bot.command()
 async def ping(ctx):
@@ -41,17 +44,27 @@ async def ping(ctx):
     await message.delete()
 
 @bot.command()
+async def quit(ctx):
+    message = await ctx.send("bye!")
+    await ctx.message.delete()
+    await asyncio.sleep(3)
+    await message.delete()
+    await bot.close()
+
+@bot.command()
 async def rescan(ctx, limit: int = 100):
     if ctx.message.channel.id not in BOT_CONF["channel_ids"]:
         return
 
-    count = 0
+    uploaded = 0
     await ctx.message.delete()
     response = await ctx.send(f"Rescanning the last {limit} messages for images")
-    async for message in ctx.channel.history(limit=limit+2, oldest_first=True):
-        count += 1 if await check_attachments(message) else 0
+    messages = await ctx.channel.history(limit=limit+1).flatten()
+    for message in messages[::-1]:
+        if await has_attachments(message):
+            uploaded += await handle_attachments(message)
     await response.delete()
-    response = await ctx.send(f"Rescan complete, added {count} images")
+    response = await ctx.send(f"Rescan complete, added {uploaded} images")
     await asyncio.sleep(3)
     await response.delete()
 
@@ -71,7 +84,8 @@ async def listen_attachments(message):
         return
     if message.channel.id not in BOT_CONF["channel_ids"]:
         return
-    await check_attachments(message)
+    if await has_attachments(message):
+        await handle_attachments(message)
 
 """
 async def authorized(message):
@@ -85,17 +99,30 @@ async def not_authorized(ctx):
     asyncio.sleep(3)
     await response.delete()
 """
+async def is_image(attachment) -> bool:
+    for ext in exts:
+        if attachment.filename.endswith(ext):
+            return True
+    return False
 
 async def has_attachments(message) -> bool:
     if len(message.attachments) > 0:
         return True
     return False
 
-async def check_attachments(message) -> bool:
+async def handle_attachments(message) -> int:
+    uploaded, exists = 0, 0
+    await message.add_reaction(emoji["loading"])
     for attachment in message.attachments:
-        for ext in exts:
-            if attachment.filename.endswith(ext):
-                return await handle_upload(message, attachment, ext)
+        if await is_image(attachment):
+            if await upload_exists(attachment):
+                exists += 1
+            elif await handle_upload(message, attachment):
+                uploaded += 1
+    await message.remove_reaction(emoji["loading"], bot.user)
+    if uploaded > 0 or exists > 0:
+        await message.add_reaction(emoji["success"])
+    return uploaded
 
 async def upload_exists(attachment) -> bool:
     image = await db.find_one(Image, Image.attachment_id == attachment.id)
@@ -103,19 +130,15 @@ async def upload_exists(attachment) -> bool:
         return True
     return False
 
-async def handle_upload(message, attachment, ext) -> bool:
-    uploaded = False
-    if await upload_exists(attachment):
-        await message.add_reaction(emoji_success)
-        return uploaded
-
+async def handle_upload(message, attachment) -> bool:
     try:
+        ext = path.splitext(attachment.filename)[1]
         filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id) + ext)
         await attachment.save(filepath)
     except discord.HTTPException:
-        await message.reply("HTTPException when attempting to download image")
+        await message.reply(f"HTTPException when attempting to download image {attachment.id}")
     except discord.NotFound:
-        await message.channel.send("NotFound exception when attempting to download image")
+        await message.channel.send(f"NotFound exception when attempting to download image {attachment.id}")
     else:
         image = Image(
             filename = attachment.filename,
@@ -130,10 +153,8 @@ async def handle_upload(message, attachment, ext) -> bool:
             user_id = message.author.id
         )
         await db.save(image)
-        await message.add_reaction(emoji_success)
-        uploaded = True
-    finally:
-        return uploaded
+        return True
+    return False
 
 if __name__ == "__main__":
 
