@@ -13,16 +13,16 @@ from config import DB_CONF, BOT_CONF, UPLOAD_DIRECTORY
 
 class Discord2VRCBot(commands.Bot):
 
-    def __init__(self, command_prefix, db_conf, bot_conf):
+    def __init__(self, command_prefix: str, db_conf: dict, bot_conf: dict):
         commands.Bot.__init__(self, command_prefix = command_prefix,
                                     owner_ids = set(bot_conf["authorized"]))
         self.valid_channels = set(bot_conf["channel_ids"])
         self._setup_db(db_conf)
 
-    def _setup_db(self, db_conf):
+    def _setup_db(self, db_conf: dict):
         db_conf["password"] = quote_plus(db_conf["password"])
         client = AsyncIOMotorClient("mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**db_conf))
-        self.db = AIOEngine(motor_client=client, database=db_conf["database_name"])
+        self.db = AIOEngine(motor_client = client, database = db_conf["database_name"])
 
     async def on_ready(self):
         print('Logged on as', self.user)
@@ -32,7 +32,7 @@ class ImageHandler(commands.Cog):
     exts = [".jpg", ".jpeg", ".png"]
     emoji = {"success": "✅", "loading": "⌛"}
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
@@ -61,7 +61,7 @@ class ImageHandler(commands.Cog):
         return uploaded
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
-        image = await self.bot.db.find_one(Image, Image.attachment_id==attachment.id)
+        image = await self.bot.db.find_one(Image, Image.attachment_id == attachment.id)
         if image is not None:
             return True
         return False
@@ -69,7 +69,7 @@ class ImageHandler(commands.Cog):
     async def _handle_upload(self, message: discord.Message, attachment: discord.Attachment) -> bool:
         try:
             ext = path.splitext(attachment.filename)[1]
-            filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id)+ext)
+            filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id) + ext)
             await attachment.save(filepath)
         except discord.HTTPException:
             await message.reply(f"HTTPException when attempting to download image {attachment.id}")
