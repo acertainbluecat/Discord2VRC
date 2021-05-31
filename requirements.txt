@@ -1,0 +1,6 @@
+discord.py==1.6.0
+fastapi==0.65.1
+aiofiles==0.7.0
+odmantic==0.3.5
+uvicorn==0.13.4
+uvloop==0.15.2
