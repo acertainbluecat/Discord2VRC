@@ -56,6 +56,13 @@ class AdminCog(commands.Cog):
         await ctx.send("pong!", delete_after = 3)
 
     @commands.command()
+    async def clear(self, ctx, limit: int = 100):
+        for message in await ctx.channel.history(limit = limit).flatten():
+            if message.author.id == self.bot.user.id:
+                await message.delete()
+        await ctx.message.delete()
+
+    @commands.command()
     async def quit(self, ctx):
         await ctx.message.delete()
         message = await ctx.send("bye!")
