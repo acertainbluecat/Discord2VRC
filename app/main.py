@@ -27,7 +27,8 @@ async def startup_event():
     # this is gross
     global db
     DB_CONF["password"] = quote_plus(DB_CONF["password"])
-    client = AsyncIOMotorClient("mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**DB_CONF))
+    client = AsyncIOMotorClient(
+        "mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**DB_CONF))
     db = AIOEngine(motor_client=client, database=DB_CONF["database_name"])
 
 @app.get("/")
@@ -48,8 +49,8 @@ async def all_count():
     return count
 
 @app.get("/api/all/items")
-async def all_count(skip: int = 0, limit: int = 100):
-    images = await db.find(Image, sort = Image.attachment_id.desc(), skip=skip, limit=limit)
+async def all_items(skip: int = 0, limit: int = 100):
+    images = await db.find(Image, sort=Image.attachment_id.desc(), skip=skip, limit=limit)
     return images
 
 @app.get("/api/{alias}/info")
@@ -64,16 +65,21 @@ async def channel_count(alias: str):
     return count
 
 @app.get("/api/{alias}/items")
-async def all_count(alias: str, skip: int = 0, limit: int = 100):
+async def alias_items(alias: str, skip: int = 0, limit: int = 100):
     channel = await get_channel(alias)
-    images = await db.find(Image, Image.channel == channel.id, sort = Image.attachment_id.desc(), skip=skip, limit=limit)
+    images = await db.find(Image,
+                           Image.channel == channel.id,
+                           sort=Image.attachment_id.desc(),
+                           skip=skip, limit=limit)
     return images
 
 # Endpoints for VRChat
 
 @app.get("/vrc/all/latest")
 async def all_latest():
-    image = await db.find_one(Image, Image.deleted == False, sort = Image.attachment_id.desc())
+    image = await db.find_one(Image,
+                              Image.deleted == False,
+                              sort=Image.attachment_id.desc())
     if image is not None:
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
@@ -81,9 +87,9 @@ async def all_latest():
 @app.get("/vrc/all/random")
 async def all_random_image():
     images = db.get_collection(Image)
-    result = await images.aggregate([{"$sample": { "size": 1 }},
-                                    {"$match": {"deleted": False}}]).to_list(length=1)
-    if len(result) is not 0:
+    result = await images.aggregate([{"$sample": {"size": 1}},
+                                     {"$match": {"deleted": False}}]).to_list(length=1)
+    if len(result) > 0:
         return RedirectResponse(url="/"+result[0]["filepath"])
     return RedirectResponse(url=placeholder)
 
@@ -94,20 +100,29 @@ async def all_random_sync():
         seed = int(datetime.now().timestamp() / 5)
         random.seed(seed)
         num = random.randint(0, count-1)
-        images = await db.find(Image, Image.deleted == False, sort = Image.attachment_id.desc(), skip=num, limit=1)
+        images = await db.find(Image,
+                               Image.deleted == False,
+                               sort=Image.attachment_id.desc(),
+                               skip=num, limit=1)
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/desc/{n}")
 async def all_desc(n: int):
-    images = await db.find(Image, Image.deleted == False, sort = Image.attachment_id.desc(), skip=n, limit=1)
+    images = await db.find(Image,
+                           Image.deleted == False,
+                           sort=Image.attachment_id.desc(),
+                           skip=n, limit=1)
     if images is not None:
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/asc/{n}")
 async def all_asc(n: int):
-    images = await db.find(Image, Image.deleted == False, sort = Image.attachment_id.asc(), skip=n, limit=1)
+    images = await db.find(Image,
+                           Image.deleted == False,
+                           sort=Image.attachment_id.asc(),
+                           skip=n, limit=1)
     if images is not None:
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
@@ -117,7 +132,9 @@ async def channel_latest(alias: str):
     channel = await get_channel(alias)
     if channel is None:
         return RedirectResponse(url=placeholder)
-    image = await db.find_one(Image, (Image.deleted == False) & (Image.channel == channel.id), sort = Image.created_at.desc())
+    image = await db.find_one(Image,
+                             (Image.deleted == False) & (Image.channel == channel.id),
+                             sort=Image.created_at.desc())
     if image is not None:
         return RedirectResponse(url="/"+image.filepath)
     return RedirectResponse(url=placeholder)
@@ -128,11 +145,12 @@ async def channel_random_image(alias: str):
     if channel is None:
         return RedirectResponse(url=placeholder)
     images = db.get_collection(Image)
+    # $sample size must be less than 5% of total doc size
     result = await images.aggregate([
-        {"$sample": { "size": 1 }},
+        {"$sample": {"size": 1}},
         {"$match": {"channel": ObjectId(channel.id), "deleted": False}}
     ]).to_list(length=1)
-    if len(result) is not 0:
+    if len(result) > 0:
         return RedirectResponse(url="/"+result[0]["filepath"])
     return RedirectResponse(url=placeholder)
 
@@ -141,13 +159,17 @@ async def channel_random_sync(alias: str):
     channel = await get_channel(alias)
     if channel is None:
         return RedirectResponse(url=placeholder)
-    count = await db.count(Image, Image.deleted == False, Image.channel == channel.id)
+    count = await db.count(Image,
+                           Image.deleted == False,
+                           Image.channel == channel.id)
     if count > 0:
         seed = int(datetime.now().timestamp() / 5)
         random.seed(seed)
         num = random.randint(0, count-1)
-        images = await db.find(Image, (Image.deleted == False)
-                                    & (Image.channel == channel.id), sort = Image.created_at.desc(), skip=num, limit=1)
+        images = await db.find(Image,
+                              (Image.deleted == False) & (Image.channel == channel.id),
+                              sort=Image.created_at.desc(),
+                              skip=num, limit=1)
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
 
@@ -156,8 +178,10 @@ async def channel_desc(alias: str, n: int):
     channel = await get_channel(alias)
     if channel is None:
         return RedirectResponse(url=placeholder)
-    images = await db.find(Image, (Image.deleted == False)
-                                & (Image.channel == channel.id), sort = Image.created_at.desc(), skip=n, limit=1)
+    images = await db.find(Image,
+                          (Image.deleted == False) & (Image.channel == channel.id),
+                          sort=Image.created_at.desc(),
+                          skip=n, limit=1)
     if images is not None:
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)
@@ -167,8 +191,10 @@ async def channel_asc(alias: str, n: int):
     channel = await get_channel(alias)
     if channel is None:
         return RedirectResponse(url=placeholder)
-    images = await db.find(Image, (Image.deleted == False)
-                                & (Image.channel == channel.id), sort = Image.created_at.asc(), skip=n, limit=1)
+    images = await db.find(Image,
+                           (Image.deleted == False) & (Image.channel == channel.id),
+                           sort=Image.created_at.asc(),
+                           skip=n, limit=1)
     if images is not None:
         return RedirectResponse(url="/"+images[0].filepath)
     return RedirectResponse(url=placeholder)

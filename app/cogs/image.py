@@ -8,6 +8,7 @@ from discord.ext import commands
 from model import Channel, Image
 from config import BOT_CONF, UPLOAD_DIRECTORY
 
+
 class ImageCog(commands.Cog):
 
     exts = [".jpg", ".jpeg", ".png"]
@@ -18,7 +19,7 @@ class ImageCog(commands.Cog):
         asyncio.ensure_future(self._load_channels())
 
     async def _load_channels(self):
-        self.channels = {c.channel_id:c async for c in self.bot.db.find(Channel)}
+        self.channels = {c.channel_id: c async for c in self.bot.db.find(Channel)}
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
         for ext in self.exts:
@@ -70,15 +71,15 @@ class ImageCog(commands.Cog):
             await message.channel.send(f"NotFound exception when attempting to download image {attachment.id}")
         else:
             image = Image(
-                filename        = attachment.filename,
-                filepath        = filepath,
-                attachment_id   = attachment.id,
-                username        = message.author.name,
-                user_num        = message.author.discriminator,
-                user_id         = message.author.id,
-                message_id      = message.id,
-                created_at      = message.created_at,
-                channel         = self.channels[message.channel.id]
+                filename=attachment.filename,
+                filepath=filepath,
+                attachment_id=attachment.id,
+                username=message.author.name,
+                user_num=message.author.discriminator,
+                user_id=message.author.id,
+                message_id=message.id,
+                created_at=message.created_at,
+                channel=self.channels[message.channel.id]
             )
             await self.bot.db.save(image)
             return True
@@ -118,18 +119,18 @@ class ImageCog(commands.Cog):
             if await self._has_attachments(message):
                 uploaded += await self._handle_attachments(message)
         await response.delete()
-        await ctx.send(f"Rescan complete, added {uploaded} new images", delete_after = 3)
+        await ctx.send(f"Rescan complete, added {uploaded} new images", delete_after=3)
 
     @commands.command()
     async def subscribe(self, ctx, alias: str = None):
         await ctx.message.delete()
         if self.is_subscribed(ctx):
-            await ctx.send("This channel is already subscribed!", delete_after = 3)
+            await ctx.send("This channel is already subscribed!", delete_after=3)
             return
         if alias is None:
-             alias = ctx.channel.name
+            alias = ctx.channel.name
         if await self._alias_exists(alias):
-            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after = 3)
+            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after=3)
             return
         if self.was_subscribed(ctx):
             channel = self.channels[ctx.channel.id]
@@ -138,15 +139,15 @@ class ImageCog(commands.Cog):
             await self.bot.db.save(channel)
         else:
             channel = Channel(
-                channel_id      = ctx.channel.id,
-                channel_name    = ctx.channel.name,
-                alias           = alias,
-                guild           = ctx.guild.name,
-                guild_id        = ctx.guild.id
+                channel_id=ctx.channel.id,
+                channel_name=ctx.channel.name,
+                alias=alias,
+                guild=ctx.guild.name,
+                guild_id=ctx.guild.id
             )
             await self.bot.db.save(channel)
         await self._load_channels()
-        await ctx.send(f"This channel is now subscribed with alias \"{alias}\"", delete_after = 3)
+        await ctx.send(f"This channel is now subscribed with alias \"{alias}\"", delete_after=3)
 
     @commands.command()
     async def unsubscribe(self, ctx):
@@ -157,9 +158,9 @@ class ImageCog(commands.Cog):
             channel.alias = str(channel.id)
             await self.bot.db.save(channel)
             await self._load_channels()
-            await ctx.send("This channel has been unsubscribed!", delete_after = 3)
+            await ctx.send("This channel has been unsubscribed!", delete_after=3)
         else:
-            await ctx.send("This channel is not subscribed!", delete_after = 3)
+            await ctx.send("This channel is not subscribed!", delete_after=3)
             return
 
     @commands.command()
@@ -168,26 +169,26 @@ class ImageCog(commands.Cog):
             return
         await ctx.message.delete()
         if alias is None:
-            await ctx.send(f"This channel's alias is \"{self.channels[ctx.channel.id].alias}\"", delete_after = 3)
+            await ctx.send(f"This channel's alias is \"{self.channels[ctx.channel.id].alias}\"", delete_after=3)
             return
         if await self._alias_exists(alias):
-            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after = 3)
+            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
         channel.alias = alias
         await self.bot.db.save(channel)
-        await ctx.send(f"This channel's alias has been changed to \"{alias}\"", delete_after = 3)
+        await ctx.send(f"This channel's alias has been changed to \"{alias}\"", delete_after=3)
 
     @commands.command()
     async def status(self, ctx):
         await ctx.message.delete()
         if not self.is_subscribed(ctx):
-            await ctx.send("This channel is not subscribed", delete_after = 3)
+            await ctx.send("This channel is not subscribed", delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
         count = await self.bot.db.count(Image, (Image.deleted == False) & (Image.channel == channel.id))
         await ctx.send(f"There are currently {count} images from this channel indexed under the alias \"{channel.alias}\"",
-                        delete_after = 5)
+                       delete_after=5)
 
     @commands.command()
     async def purge(self, ctx):
@@ -199,17 +200,18 @@ class ImageCog(commands.Cog):
         for image in images:
             image.deleted = True
         await self.bot.db.save_all(images)
-        await ctx.send(f"{len(images)} images from this channel have been purged", delete_after = 3)
+        await ctx.send(f"{len(images)} images from this channel have been purged", delete_after=3)
 
     @commands.command()
     async def reactclear(self, ctx, limit: int = 100):
         await ctx.message.delete()
         msg = await ctx.send(f"Clearing my reactions from the last {limit} messages")
-        for message in await ctx.channel.history(limit = limit).flatten():
+        for message in await ctx.channel.history(limit=limit).flatten():
             for reaction in message.reactions:
                 if reaction.me:
                     await reaction.remove(self.bot.user)
         await msg.delete()
+
 
 def setup(bot):
     bot.add_cog(ImageCog(bot))
