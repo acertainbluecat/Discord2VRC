@@ -11,6 +11,7 @@ from config import BOT_CONF, UPLOAD_DIRECTORY
 
 
 class ImageCog(commands.Cog):
+    """This extension handles the crawling and management of images"""
 
     exts = [".jpg", ".jpeg", ".png"]
     emoji = {"success": "✅", "loading": "⌛"}
@@ -115,6 +116,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def rescan(self, ctx, limit: int = 100):
+        """Rescans current channel for images if it is subscribed"""
         if not self.is_subscribed(ctx):
             return
         uploaded = 0
@@ -135,6 +137,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def subscribe(self, ctx, alias: str = None):
+        """Subscribe current channel for image crawling"""
         await ctx.message.delete()
         if self.is_subscribed(ctx):
             await ctx.send("This channel is already subscribed!", delete_after=3)
@@ -163,6 +166,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def unsubscribe(self, ctx):
+        """Subscribe current channel for image crawling"""
         await ctx.message.delete()
         if self.is_subscribed(ctx):
             channel = self.channels[ctx.channel.id]
@@ -177,6 +181,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def alias(self, ctx, alias: str = None):
+        """Sets an alias for current channel's subscription"""
         if not self.is_subscribed(ctx):
             return
         await ctx.message.delete()
@@ -193,6 +198,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def status(self, ctx):
+        """Shows current channels subscription status"""
         await ctx.message.delete()
         if not self.is_subscribed(ctx):
             await ctx.send("This channel is not subscribed", delete_after=3)
@@ -204,6 +210,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def purge(self, ctx):
+        """Soft deletes all images downloaded from this channel"""
         if not self.was_subscribed(ctx):
             return
         await ctx.message.delete()
@@ -216,6 +223,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def reactclear(self, ctx, limit: int = 100):
+        """Clear all bot reactions from this channel"""
         await ctx.message.delete()
         msg = await ctx.send(f"Clearing my reactions from the last {limit} messages")
         for message in await ctx.channel.history(limit=limit).flatten():

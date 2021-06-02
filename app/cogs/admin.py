@@ -4,6 +4,7 @@ import asyncio
 from discord.ext import commands
 
 class AdminCog(commands.Cog):
+    """This extension handles some basic administrative commands"""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -15,6 +16,7 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     async def load(self, ctx, cog: str):
+        """Load extension, eg. !load cogs.admin"""
         await ctx.message.delete()
         try:
             self.bot.load_extension(cog)
@@ -25,6 +27,7 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     async def unload(self, ctx, cog: str):
+        """Unload extension, eg. !unload cogs.admin"""
         await ctx.message.delete()
         if cog == "cogs.admin":
             await ctx.send("I'm afraid I can't let you do that", delete_after=3)
@@ -38,6 +41,7 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     async def reload(self, ctx, cog: str):
+        """Reload extension, eg. !reload cogs.admin"""
         await ctx.message.delete()
         try:
             self.bot.reload_extension(cog)
@@ -48,15 +52,23 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     async def extensions(self, ctx):
+        """Shows extensions currently loaded"""
         await ctx.send("Extensions loaded: " + ", ".join(self.bot.extensions.keys()), delete_after=5)
 
     @commands.command()
     async def ping(self, ctx):
+        """Ping!"""
         await ctx.message.delete()
         await ctx.send("pong!", delete_after=3)
 
+    @commands.command(hidden=True)
+    async def pong(self, ctx):
+        await ctx.message.delete()
+        await ctx.send("peng!", delete_after=3)
+
     @commands.command()
     async def clear(self, ctx, limit: int = 100):
+        """clear channel of bot messages"""
         for message in await ctx.channel.history(limit=limit).flatten():
             if message.author.id == self.bot.user.id:
                 await message.delete()
@@ -64,6 +76,7 @@ class AdminCog(commands.Cog):
 
     @commands.command()
     async def quit(self, ctx):
+        """Tells bot to quit"""
         await ctx.message.delete()
         message = await ctx.send("bye!")
         await asyncio.sleep(3)
