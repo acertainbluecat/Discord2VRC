@@ -1,8 +1,9 @@
+import io
 import discord
 import asyncio
+import PIL.Image
 
 from os import path
-from functools import partial
 from discord.ext import commands
 
 from model import Channel, Image
@@ -60,11 +61,16 @@ class ImageCog(commands.Cog):
             return True
         return False
 
+    async def _save_image(self, image_bytes: bytes, filepath: str):
+        im = PIL.Image.open(io.BytesIO(image_bytes))
+        im_jpg = im.convert("RGB")
+        im_jpg.save(filepath, quality=80)
+
     async def _handle_upload(self, message: discord.Message, attachment: discord.Attachment) -> bool:
         try:
-            ext = path.splitext(attachment.filename)[1]
-            filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id) + ext)
-            await attachment.save(filepath)
+            filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id) + ".jpg")
+            image_bytes = await attachment.read()
+            await self._save_image(image_bytes, filepath)
         except discord.HTTPException:
             await message.reply(f"HTTPException when attempting to download image {attachment.id}")
         except discord.NotFound:
@@ -112,13 +118,19 @@ class ImageCog(commands.Cog):
         if not self.is_subscribed(ctx):
             return
         uploaded = 0
-        await ctx.message.delete()
-        response = await ctx.send(f"Rescanning the last {limit} messages for images")
         messages = await ctx.channel.history(limit=limit+1).flatten()
+        await ctx.message.delete()
+        count = len(messages)
+        response = await ctx.send(f"Rescanning the last {count} messages for images")
+        current = 0
+        progress = await ctx.send(content=f"Progress {current}/{count}")
         for message in messages[::-1]:
             if await self._has_attachments(message):
                 uploaded += await self._handle_attachments(message)
+            current += 1
+            await progress.edit(content=f"Progress {current}/{count}")
         await response.delete()
+        await progress.delete()
         await ctx.send(f"Rescan complete, added {uploaded} new images", delete_after=3)
 
     @commands.command()
@@ -192,7 +204,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def purge(self, ctx):
-        if not self.is_subscribed(ctx):
+        if not self.was_subscribed(ctx):
             return
         await ctx.message.delete()
         channel = self.channels[ctx.channel.id]
