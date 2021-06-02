@@ -103,10 +103,10 @@ async def all_random_image():
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/all/randomsync")
-async def all_random_sync(timer: int = 5):
+async def all_random_sync(timer: int = 5, offset: int = 0):
     count = await db.count(Image, Image.deleted == False)
     if count > 0:
-        seed = int(datetime.now().timestamp() / timer)
+        seed = int(datetime.now().timestamp() / timer) - offset
         random.seed(seed)
         num = random.randint(0, count-1)
         images = await db.find(Image,
@@ -152,14 +152,14 @@ async def channel_random_image(alias: str):
     return RedirectResponse(url=placeholder)
 
 @app.get("/vrc/{alias}/randomsync")
-async def channel_random_sync(alias: str, timer: int = 5):
+async def channel_random_sync(alias: str, timer: int = 5, offset: int = 0):
     channel = await get_channel(alias)
     if channel:
         count = await db.count(Image,
                                Image.deleted == False,
                                Image.channel == channel.id)
         if count > 0:
-            seed = int(datetime.now().timestamp() / timer)
+            seed = int(datetime.now().timestamp() / timer) - offset
             random.seed(seed)
             num = random.randint(0, count-1)
             images = await db.find(Image,
