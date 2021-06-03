@@ -1,13 +1,13 @@
 import io
 import discord
 import asyncio
-import PIL.Image
 
 from os import path
+from PIL import Image
 from discord.ext import commands
 
-from model import Channel, Image
-from config import BOT_CONF, UPLOAD_DIRECTORY
+from common.models import ChannelModel, ImageModel
+from common.config import BOT_CONF, UPLOAD_DIRECTORY
 
 
 class ImageCog(commands.Cog):
@@ -21,7 +21,7 @@ class ImageCog(commands.Cog):
         asyncio.ensure_future(self._load_channels())
 
     async def _load_channels(self):
-        self.channels = {c.channel_id: c async for c in self.bot.db.find(Channel)}
+        self.channels = {c.channel_id: c async for c in self.bot.db.find(ChannelModel)}
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
         for ext in self.exts:
@@ -49,7 +49,8 @@ class ImageCog(commands.Cog):
         return uploaded
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
-        image = await self.bot.db.find_one(Image, Image.attachment_id == attachment.id)
+        image = await self.bot.db.find_one(ImageModel,
+                                           ImageModel.attachment_id == attachment.id)
         if image is not None:
             image.deleted = False
             await self.bot.db.save(image)
@@ -57,13 +58,14 @@ class ImageCog(commands.Cog):
         return False
 
     async def _alias_exists(self, alias: str) -> bool:
-        channel = await self.bot.db.find_one(Channel, Channel.alias == alias)
+        channel = await self.bot.db.find_one(ChannelModel,
+                                             ChannelModel.alias == alias)
         if channel is not None:
             return True
         return False
 
     async def _save_image(self, image_bytes: bytes, filepath: str):
-        im = PIL.Image.open(io.BytesIO(image_bytes))
+        im = Image.open(io.BytesIO(image_bytes))
         im_jpg = im.convert("RGB")
         im_jpg.save(filepath, quality=80)
 
@@ -77,7 +79,7 @@ class ImageCog(commands.Cog):
         except discord.NotFound:
             await message.channel.send(f"NotFound exception when attempting to download image {attachment.id}")
         else:
-            image = Image(
+            image = ImageModel(
                 filename=attachment.filename,
                 filepath=filepath,
                 attachment_id=attachment.id,
@@ -153,7 +155,7 @@ class ImageCog(commands.Cog):
             channel.subscribed = True
             await self.bot.db.save(channel)
         else:
-            channel = Channel(
+            channel = ChannelModel(
                 channel_id=ctx.channel.id,
                 channel_name=ctx.channel.name,
                 alias=alias,
@@ -204,8 +206,10 @@ class ImageCog(commands.Cog):
             await ctx.send("This channel is not subscribed", delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
-        count = await self.bot.db.count(Image, (Image.deleted == False) & (Image.channel == channel.id))
-        await ctx.send(f"There are currently {count} images from this channel indexed under the alias \"{channel.alias}\"",
+        count = await self.bot.db.count(ImageModel,
+                                       (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
+        await ctx.send(f"There are currently {count} images from this channel"
+                       f"indexed under the alias \"{channel.alias}\"",
                        delete_after=5)
 
     @commands.command()
@@ -215,7 +219,8 @@ class ImageCog(commands.Cog):
             return
         await ctx.message.delete()
         channel = self.channels[ctx.channel.id]
-        images = await self.bot.db.find(Image, (Image.deleted == False) & (Image.channel == channel.id))
+        images = await self.bot.db.find(ImageModel,
+                                       (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
         for image in images:
             image.deleted = True
         await self.bot.db.save_all(images)

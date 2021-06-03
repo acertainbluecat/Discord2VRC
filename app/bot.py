@@ -8,8 +8,7 @@ from urllib.parse import quote_plus
 from odmantic import AIOEngine
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from model import Image
-from config import DB_CONF, BOT_CONF, UPLOAD_DIRECTORY
+from common.config import DB_CONF, BOT_CONF, UPLOAD_DIRECTORY
 
 
 class Discord2VRCBot(commands.Bot):
@@ -17,7 +16,6 @@ class Discord2VRCBot(commands.Bot):
     def __init__(self, command_prefix: str, db_conf: dict, bot_conf: dict):
         commands.Bot.__init__(self, command_prefix=command_prefix,
                               owner_ids=set(bot_conf["authorized"]))
-        self.valid_channels = set(bot_conf["channel_ids"])
         self._setup_db(db_conf)
 
     def _setup_db(self, db_conf: dict):
@@ -36,7 +34,7 @@ class Discord2VRCBot(commands.Bot):
                     await ctx.message.delete()
                 except:
                     pass
-            await ctx.send("Unexpected error, see console log for details", delete_after=3)
+            await ctx.send(f'Error: {type(error).__name__} - {error}', delete_after=5)
             raise error
 
     async def on_ready(self):

@@ -1,7 +1,7 @@
 from datetime import datetime
 from odmantic import Model, Field, Reference
 
-class Channel(Model):
+class ChannelModel(Model):
     channel_id:     int
     channel_name:   str
     alias:          str
@@ -9,11 +9,11 @@ class Channel(Model):
     guild_id:       int
     subscribed:     bool = True
 
-class Image(Model):
+class ImageModel(Model):
     filename:       str
     filepath:       str
     attachment_id:  int
-    channel:        Channel = Reference()
+    channel:        ChannelModel = Reference()
     username:       str
     user_num:       str
     user_id:        int
@@ -21,4 +21,3 @@ class Image(Model):
     created_at:     datetime
     retrieved_at:   datetime = Field(default_factory = datetime.utcnow)
     deleted:        bool = False
-    
