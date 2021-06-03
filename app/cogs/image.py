@@ -10,7 +10,7 @@ from common.models import ChannelModel, ImageModel
 from common.config import BOT_CONF, UPLOAD_DIRECTORY
 
 
-class ImageCog(commands.Cog):
+class ImageCog(commands.Cog, name="Image"):
     """This extension handles the crawling and management of images"""
 
     exts = [".jpg", ".jpeg", ".png"]
@@ -168,7 +168,7 @@ class ImageCog(commands.Cog):
 
     @commands.command()
     async def unsubscribe(self, ctx):
-        """Subscribe current channel for image crawling"""
+        """Unsubscribe current channel for image crawling"""
         await ctx.message.delete()
         if self.is_subscribed(ctx):
             channel = self.channels[ctx.channel.id]
@@ -208,7 +208,7 @@ class ImageCog(commands.Cog):
         channel = self.channels[ctx.channel.id]
         count = await self.bot.db.count(ImageModel,
                                        (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
-        await ctx.send(f"There are currently {count} images from this channel"
+        await ctx.send(f"There are currently {count} images from this channel "
                        f"indexed under the alias \"{channel.alias}\"",
                        delete_after=5)
 
