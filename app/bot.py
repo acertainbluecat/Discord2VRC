@@ -1,5 +1,7 @@
+import json
 import discord
 import asyncio
+import traceback
 
 from os import path
 from discord.ext import commands
@@ -17,12 +19,23 @@ class Discord2VRCBot(commands.Bot):
         commands.Bot.__init__(self, command_prefix=command_prefix,
                               owner_ids=set(bot_conf["authorized"]))
         self._setup_db(db_conf)
+        self._setup_cogs()
 
     def _setup_db(self, db_conf: dict):
         db_conf["password"] = quote_plus(db_conf["password"])
         client = AsyncIOMotorClient(
             "mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**db_conf))
         self.db = AIOEngine(motor_client=client, database=db_conf["database_name"])
+
+    def _setup_cogs(self):
+        with open("cogs/cogs.json") as json_file:
+            cogs = json.load(json_file)
+            for cog in cogs["loaded"]:
+                try:
+                    self.load_extension(cog)
+                except (discord.ClientException, ModuleNotFoundError):
+                    print(f'Failed to load cog {cog}.')
+                    traceback.print_exc()
 
     async def on_command_error(self, ctx, error: commands.CommandError):
         if isinstance(error, commands.CommandNotFound):
@@ -43,8 +56,5 @@ class Discord2VRCBot(commands.Bot):
 
 if __name__ == "__main__":
 
-    extensions = ["cogs.admin", "cogs.image"]
     bot = Discord2VRCBot(command_prefix="!", db_conf=DB_CONF, bot_conf=BOT_CONF)
-    for extension in extensions:
-        bot.load_extension(extension)
     bot.run(BOT_CONF["token"])
