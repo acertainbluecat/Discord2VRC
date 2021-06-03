@@ -31,7 +31,7 @@ class AdminCog(commands.Cog, name="Admin"):
 
     @commands.command()
     async def load(self, ctx, cog: str):
-        """Load extension, eg. !load cogs.admin"""
+        """Load extension, eg. !load image"""
         await ctx.message.delete()
         try:
             self.bot.load_extension(self._cog_name(cog))
@@ -45,10 +45,9 @@ class AdminCog(commands.Cog, name="Admin"):
             self.save_loaded_extensions()
             await ctx.send(f'loaded {cog} successfully', delete_after=3)
 
-
     @commands.command()
     async def unload(self, ctx, cog: str):
-        """Unload extension, eg. !unload cogs.admin"""
+        """Unload extension, eg. !unload image"""
         await ctx.message.delete()
         if self._cog_name(cog) == "cogs.admin":
             await ctx.send("I'm afraid I can't let you do that", delete_after=3)
@@ -65,7 +64,7 @@ class AdminCog(commands.Cog, name="Admin"):
 
     @commands.command()
     async def reload(self, ctx, cog: str):
-        """Reload extension, eg. !reload cogs.admin"""
+        """Reload extension, eg. !reload image"""
         await ctx.message.delete()
         try:
             self.bot.reload_extension(self._cog_name(cog))
@@ -78,7 +77,7 @@ class AdminCog(commands.Cog, name="Admin"):
 
     @commands.command()
     async def extensions(self, ctx):
-        """Shows extensions currently loaded"""
+        """Shows extensions available and loaded"""
         loaded = ", ".join(self.bot.cogs)
         available = ", ".join(self.enumerate_extensions())
         await ctx.send(f"```Loaded: {loaded}\nAvailable: {available}```")
