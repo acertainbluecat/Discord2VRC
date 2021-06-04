@@ -4,20 +4,20 @@ import discord
 import traceback
 
 from os import path
-from discord.ext import commands
-from urllib.parse import quote_plus
+from typing import List
 
+from discord.ext import commands
 from odmantic import AIOEngine
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from common.config import BOT_CONF
+from common.config import config
 from common.database import Mongo
 
 class Discord2VRCBot(commands.Bot):
 
-    def __init__(self, command_prefix: str):
+    def __init__(self, command_prefix: str, owner_ids: List[int]):
         commands.Bot.__init__(self, command_prefix=command_prefix,
-                              owner_ids=set(BOT_CONF["authorized"]))
+                              owner_ids=set(owner_ids))
         Mongo.connect()
         self._setup_cogs()
 
@@ -51,5 +51,5 @@ class Discord2VRCBot(commands.Bot):
 if __name__ == "__main__":
 
     uvloop.install()
-    bot = Discord2VRCBot(command_prefix="!")
-    bot.run(BOT_CONF["token"])
+    bot = Discord2VRCBot(command_prefix="!", owner_ids=config["discord"]["owners"])
+    bot.run(config["discord"]["token"])

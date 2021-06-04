@@ -6,8 +6,8 @@ from os import path
 from PIL import Image
 from discord.ext import commands
 
+from common.config import config
 from common.database import Mongo
-from common.config import UPLOAD_DIRECTORY
 from common.models import ChannelModel, ImageModel
 
 
@@ -72,7 +72,9 @@ class ImageCog(commands.Cog, name="Image"):
 
     async def _handle_upload(self, message: discord.Message, attachment: discord.Attachment) -> bool:
         try:
-            filepath = path.join(UPLOAD_DIRECTORY, str(attachment.id) + ".jpg")
+            filename = str(attachment.id) + ".jpg"
+            filepath = path.join(config["directories"]["uploadsdir"], filename)
+            relative_uri = path.join("static", config['directories']['uploadsfolder'], filename)
             image_bytes = await attachment.read()
             await self._save_image(image_bytes, filepath)
         except discord.HTTPException:
@@ -82,7 +84,7 @@ class ImageCog(commands.Cog, name="Image"):
         else:
             image = ImageModel(
                 filename=attachment.filename,
-                filepath=filepath,
+                filepath=relative_uri,
                 attachment_id=attachment.id,
                 username=message.author.name,
                 user_num=message.author.discriminator,

@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
+from common.config import config
 from common.database import Mongo
 from routes import api, vrc, views
 
@@ -31,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=config["directories"]["staticdir"]), name="static")
 app.add_event_handler("startup", Mongo.connect)
 app.add_event_handler("shutdown", Mongo.close)
 app.include_router(api.router, prefix="/api", tags=["api"])

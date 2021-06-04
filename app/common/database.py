@@ -3,7 +3,7 @@ from urllib.parse import quote_plus
 from odmantic import AIOEngine
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from common.config import DB_CONF
+from common.config import config
 
 class Mongo:
 
@@ -12,10 +12,10 @@ class Mongo:
 
     @staticmethod
     def connect():
-        DB_CONF["password"] = quote_plus(DB_CONF["password"])
+        db_conf = config["database"]
         Mongo.motor = AsyncIOMotorClient(
-            "mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**DB_CONF))
-        Mongo.db = AIOEngine(motor_client=Mongo.motor, database=DB_CONF["database_name"])
+            "mongodb://{username}:{password}@{host}:{port}/{database}".format(**db_conf))
+        Mongo.db = AIOEngine(motor_client=Mongo.motor, database=db_conf["database"])
 
     @staticmethod
     def close():
