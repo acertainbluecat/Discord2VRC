@@ -1,6 +1,6 @@
 import json
+import uvloop
 import discord
-import asyncio
 import traceback
 
 from os import path
@@ -10,22 +10,16 @@ from urllib.parse import quote_plus
 from odmantic import AIOEngine
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from common.config import DB_CONF, BOT_CONF, UPLOAD_DIRECTORY
-
+from common.config import BOT_CONF
+from common.database import Mongo
 
 class Discord2VRCBot(commands.Bot):
 
-    def __init__(self, command_prefix: str, db_conf: dict, bot_conf: dict):
+    def __init__(self, command_prefix: str):
         commands.Bot.__init__(self, command_prefix=command_prefix,
-                              owner_ids=set(bot_conf["authorized"]))
-        self._setup_db(db_conf)
+                              owner_ids=set(BOT_CONF["authorized"]))
+        Mongo.connect()
         self._setup_cogs()
-
-    def _setup_db(self, db_conf: dict):
-        db_conf["password"] = quote_plus(db_conf["password"])
-        client = AsyncIOMotorClient(
-            "mongodb://{username}:{password}@{host}:{port}/{database_name}".format(**db_conf))
-        self.db = AIOEngine(motor_client=client, database=db_conf["database_name"])
 
     def _setup_cogs(self):
         with open("cogs/cogs.json") as json_file:
@@ -56,5 +50,6 @@ class Discord2VRCBot(commands.Bot):
 
 if __name__ == "__main__":
 
-    bot = Discord2VRCBot(command_prefix="!", db_conf=DB_CONF, bot_conf=BOT_CONF)
+    uvloop.install()
+    bot = Discord2VRCBot(command_prefix="!")
     bot.run(BOT_CONF["token"])

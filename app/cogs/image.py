@@ -6,8 +6,9 @@ from os import path
 from PIL import Image
 from discord.ext import commands
 
+from common.database import Mongo
+from common.config import UPLOAD_DIRECTORY
 from common.models import ChannelModel, ImageModel
-from common.config import BOT_CONF, UPLOAD_DIRECTORY
 
 
 class ImageCog(commands.Cog, name="Image"):
@@ -21,7 +22,7 @@ class ImageCog(commands.Cog, name="Image"):
         asyncio.ensure_future(self._load_channels())
 
     async def _load_channels(self):
-        self.channels = {c.channel_id: c async for c in self.bot.db.find(ChannelModel)}
+        self.channels = {c.channel_id: c async for c in Mongo.db.find(ChannelModel)}
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
         for ext in self.exts:
@@ -49,16 +50,16 @@ class ImageCog(commands.Cog, name="Image"):
         return uploaded
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
-        image = await self.bot.db.find_one(ImageModel,
+        image = await Mongo.db.find_one(ImageModel,
                                            ImageModel.attachment_id == attachment.id)
         if image is not None:
             image.deleted = False
-            await self.bot.db.save(image)
+            await Mongo.db.save(image)
             return True
         return False
 
     async def _alias_exists(self, alias: str) -> bool:
-        channel = await self.bot.db.find_one(ChannelModel,
+        channel = await Mongo.db.find_one(ChannelModel,
                                              ChannelModel.alias == alias)
         if channel is not None:
             return True
@@ -90,7 +91,7 @@ class ImageCog(commands.Cog, name="Image"):
                 created_at=message.created_at,
                 channel=self.channels[message.channel.id]
             )
-            await self.bot.db.save(image)
+            await Mongo.db.save(image)
             return True
         return False
 
@@ -153,7 +154,7 @@ class ImageCog(commands.Cog, name="Image"):
             channel = self.channels[ctx.channel.id]
             channel.alias = alias
             channel.subscribed = True
-            await self.bot.db.save(channel)
+            await Mongo.db.save(channel)
         else:
             channel = ChannelModel(
                 channel_id=ctx.channel.id,
@@ -162,7 +163,7 @@ class ImageCog(commands.Cog, name="Image"):
                 guild=ctx.guild.name,
                 guild_id=ctx.guild.id
             )
-            await self.bot.db.save(channel)
+            await Mongo.db.save(channel)
         await self._load_channels()
         await ctx.send(f"This channel is now subscribed with alias \"{alias}\"", delete_after=3)
 
@@ -174,7 +175,7 @@ class ImageCog(commands.Cog, name="Image"):
             channel = self.channels[ctx.channel.id]
             channel.subscribed = False
             channel.alias = str(channel.id)
-            await self.bot.db.save(channel)
+            await Mongo.db.save(channel)
             await self._load_channels()
             await ctx.send("This channel has been unsubscribed!", delete_after=3)
         else:
@@ -195,7 +196,7 @@ class ImageCog(commands.Cog, name="Image"):
             return
         channel = self.channels[ctx.channel.id]
         channel.alias = alias
-        await self.bot.db.save(channel)
+        await Mongo.db.save(channel)
         await ctx.send(f"This channel's alias has been changed to \"{alias}\"", delete_after=3)
 
     @commands.command()
@@ -206,8 +207,8 @@ class ImageCog(commands.Cog, name="Image"):
             await ctx.send("This channel is not subscribed", delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
-        count = await self.bot.db.count(ImageModel,
-                                       (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
+        count = await Mongo.db.count(ImageModel,
+                                    (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
         await ctx.send(f"There are currently {count} images from this channel "
                        f"indexed under the alias \"{channel.alias}\"",
                        delete_after=5)
@@ -219,11 +220,11 @@ class ImageCog(commands.Cog, name="Image"):
             return
         await ctx.message.delete()
         channel = self.channels[ctx.channel.id]
-        images = await self.bot.db.find(ImageModel,
-                                       (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
+        images = await Mongo.db.find(ImageModel,
+                                    (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
         for image in images:
             image.deleted = True
-        await self.bot.db.save_all(images)
+        await Mongo.db.save_all(images)
         await ctx.send(f"{len(images)} images from this channel have been purged", delete_after=3)
 
     @commands.command()

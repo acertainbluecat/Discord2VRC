@@ -1,7 +1,6 @@
 import json
 import discord
 import asyncio
-import traceback
 
 from os import listdir
 from discord.ext import commands
