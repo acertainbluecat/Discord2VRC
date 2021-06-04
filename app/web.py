@@ -40,4 +40,4 @@ app.include_router(views.router)
 
 if __name__ == "__main__":
 
-    uvicorn.run("web:app", host="sternenklar.nyanpa.su", port=5000, reload=True)
+    uvicorn.run("web:app", host="0.0.0.0", port=5000, reload=True)
