@@ -32,12 +32,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory=config["directories"]["staticdir"]), name="static")
 app.add_event_handler("startup", Mongo.connect)
 app.add_event_handler("shutdown", Mongo.close)
 app.include_router(api.router, prefix="/api", tags=["api"])
 app.include_router(vrc.router, prefix="/vrc", tags=["vrc"])
 app.include_router(views.router)
+app.mount("/", StaticFiles(directory=config["directories"]["staticdir"]), name="static")
 
 if __name__ == "__main__":
 

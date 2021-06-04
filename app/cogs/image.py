@@ -74,7 +74,7 @@ class ImageCog(commands.Cog, name="Image"):
         try:
             filename = str(attachment.id) + ".jpg"
             filepath = path.join(config["directories"]["uploadsdir"], filename)
-            relative_uri = path.join("static", config['directories']['uploadsfolder'], filename)
+            relative_uri = path.join(config["directories"]["uploadsfolder"], filename)
             image_bytes = await attachment.read()
             await self._save_image(image_bytes, filepath)
         except discord.HTTPException:

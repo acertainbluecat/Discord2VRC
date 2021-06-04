@@ -1,9 +1,11 @@
 import random
+from os import path
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Query, Path
 from starlette.responses import RedirectResponse, Response
 
+from common.config import config
 from common.database import Mongo
 from common.models import ChannelModel, ImageModel
 from common.utils import Order, get_channel, get_seed
@@ -12,11 +14,11 @@ router = APIRouter(default_response_class=Response)
 
 
 def RedirectPlaceholder() -> RedirectResponse:
-    return RedirectResponse(url="/static/404.png")
+    return RedirectResponse(url="/placeholder.png")
 
 
 def RedirectImage(filepath: str) -> RedirectResponse:
-    return RedirectResponse(url="/"+filepath)
+    return RedirectResponse(url=path.join("/", filepath))
 
 
 @router.get("/all/latest")
