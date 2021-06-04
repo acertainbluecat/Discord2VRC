@@ -38,9 +38,9 @@ async def channel_latest(alias: str):
     channel = await get_channel(alias)
     if channel:
         image = await Mongo.db.find_one(ImageModel,
-                                        (ImageModel.deleted == False)
-                                        & (ImageModel.channel == channel.id),
-                                        sort=ImageModel.created_at.desc())
+                                       (ImageModel.deleted == False)
+                                       & (ImageModel.channel == channel.id),
+                                       sort=ImageModel.created_at.desc())
         if image is not None:
             return RedirectImage(image.filepath)
     return RedirectPlaceholder()
@@ -111,10 +111,10 @@ async def channel_random_sync(alias: str,
             random.seed(get_seed(interval, offset))
             num = random.randint(0, count-1)
             images = await Mongo.db.find(ImageModel,
-                                         (ImageModel.deleted == False)
-                                         & (ImageModel.channel == channel.id),
-                                         sort=ImageModel.created_at.desc(),
-                                         skip=num, limit=1)
+                                        (ImageModel.deleted == False)
+                                        & (ImageModel.channel == channel.id),
+                                        sort=ImageModel.created_at.desc(),
+                                        skip=num, limit=1)
             return RedirectImage(images[0].filepath)
     return RedirectPlaceholder()
 
@@ -141,10 +141,10 @@ async def channel_ordered(alias: str,
     channel = await get_channel(alias)
     if channel:
         images = await Mongo.db.find(ImageModel,
-                                     (ImageModel.deleted == False)
-                                     & (ImageModel.channel == channel.id),
-                                     sort=getattr(ImageModel.attachment_id, order.value)(),
-                                     skip=n, limit=1)
+                                    (ImageModel.deleted == False)
+                                    & (ImageModel.channel == channel.id),
+                                    sort=getattr(ImageModel.attachment_id, order.value)(),
+                                    skip=n, limit=1)
         if images is not None:
             return RedirectImage(images[0].filepath)
     return RedirectPlaceholder()

@@ -51,7 +51,7 @@ class ImageCog(commands.Cog, name="Image"):
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
         image = await Mongo.db.find_one(ImageModel,
-                                           ImageModel.attachment_id == attachment.id)
+                                        ImageModel.attachment_id == attachment.id)
         if image is not None:
             image.deleted = False
             await Mongo.db.save(image)
@@ -60,7 +60,7 @@ class ImageCog(commands.Cog, name="Image"):
 
     async def _alias_exists(self, alias: str) -> bool:
         channel = await Mongo.db.find_one(ChannelModel,
-                                             ChannelModel.alias == alias)
+                                          ChannelModel.alias == alias)
         if channel is not None:
             return True
         return False
@@ -150,7 +150,8 @@ class ImageCog(commands.Cog, name="Image"):
         if alias is None:
             alias = ctx.channel.name
         if await self._alias_exists(alias):
-            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after=3)
+            await ctx.send(f"The alias \"{alias}\" already exists, please pick another",
+                           delete_after=3)
             return
         if self.was_subscribed(ctx):
             channel = self.channels[ctx.channel.id]
@@ -167,7 +168,8 @@ class ImageCog(commands.Cog, name="Image"):
             )
             await Mongo.db.save(channel)
         await self._load_channels()
-        await ctx.send(f"This channel is now subscribed with alias \"{alias}\"", delete_after=3)
+        await ctx.send(f"This channel is now subscribed with alias \"{alias}\"",
+                       delete_after=3)
 
     @commands.command()
     async def unsubscribe(self, ctx):
@@ -191,15 +193,18 @@ class ImageCog(commands.Cog, name="Image"):
             return
         await ctx.message.delete()
         if alias is None:
-            await ctx.send(f"This channel's alias is \"{self.channels[ctx.channel.id].alias}\"", delete_after=3)
+            await ctx.send(f"This channel's alias is \"{self.channels[ctx.channel.id].alias}\"",
+                           delete_after=3)
             return
         if await self._alias_exists(alias):
-            await ctx.send(f"The alias \"{alias}\" already exists, please pick another", delete_after=3)
+            await ctx.send(f"The alias \"{alias}\" already exists, please pick another",
+                           delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
         channel.alias = alias
         await Mongo.db.save(channel)
-        await ctx.send(f"This channel's alias has been changed to \"{alias}\"", delete_after=3)
+        await ctx.send(f"This channel's alias has been changed to \"{alias}\"",
+                       delete_after=3)
 
     @commands.command()
     async def status(self, ctx):
@@ -210,7 +215,8 @@ class ImageCog(commands.Cog, name="Image"):
             return
         channel = self.channels[ctx.channel.id]
         count = await Mongo.db.count(ImageModel,
-                                    (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
+                                    (ImageModel.deleted == False)
+                                    & (ImageModel.channel == channel.id))
         await ctx.send(f"There are currently {count} images from this channel "
                        f"indexed under the alias \"{channel.alias}\"",
                        delete_after=5)
@@ -223,7 +229,8 @@ class ImageCog(commands.Cog, name="Image"):
         await ctx.message.delete()
         channel = self.channels[ctx.channel.id]
         images = await Mongo.db.find(ImageModel,
-                                    (ImageModel.deleted == False) & (ImageModel.channel == channel.id))
+                                    (ImageModel.deleted == False)
+                                    & (ImageModel.channel == channel.id))
         for image in images:
             image.deleted = True
         await Mongo.db.save_all(images)
