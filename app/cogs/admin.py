@@ -108,11 +108,14 @@ class AdminCog(commands.Cog, name="Admin"):
 
     @commands.command()
     async def clear(self, ctx, limit: int = 100):
-        """clear channel of bot messages"""
-        for message in await ctx.channel.history(limit=limit).flatten():
-            if message.author.id == self.bot.user.id:
-                await message.delete()
-        await ctx.message.delete()
+        """clear channel of bot messages,
+        defaults to last 100 messages"""
+        async with ctx.channel.typing():
+            for message in await ctx.channel.history(limit=limit).flatten():
+                if message.author.id == self.bot.user.id:
+                    await message.delete()
+            await ctx.message.delete()
+            await ctx.send("Messages cleared!", delete_after=3)
 
     @commands.command()
     async def quit(self, ctx):
