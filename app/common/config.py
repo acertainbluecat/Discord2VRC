@@ -13,17 +13,19 @@ def parse_owners(owners: str) -> List[int]:
 
 
 def to_dict(cfg: configparser.ConfigParser) -> dict:
-    return {k.lower(): dict(cfg[k]) for k in cfg.sections()}
+    return {s.lower(): dict(cfg[s]) for s in cfg.sections()}
 
 
 def setup_config() -> dict:
-    config = configparser.ConfigParser()
-    config.read(CONFIG_DIR)
-    config = to_dict(config)
+    cfg = configparser.ConfigParser()
+    cfg.read(CONFIG_DIR)
+    config = to_dict(cfg)
     config["discord"]["owners"] = parse_owners(config["discord"]["owners"])
     config["database"]["password"] = quote_plus(config["database"]["password"])
-    config["directories"]["uploadsdir"] = path.join(config["directories"]["staticdir"],
-                                                    config["directories"]["uploadsfolder"])
+    config["directories"]["uploadsdir"] = path.join(
+        config["directories"]["staticdir"],
+        config["directories"]["uploadsfolder"],
+    )
     return config
 
 

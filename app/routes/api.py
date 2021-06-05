@@ -15,12 +15,17 @@ async def all_count():
 
 
 @router.get("/all/items", response_model=List[ImageModel])
-async def all_items(skip: int = Query(0, le=100),
-                    limit: int = Query(100, le=100),
-                    order: Order = Order.desc):
-    images = await Mongo.db.find(ImageModel,
-                                 sort=getattr(ImageModel.attachment_id, order.value)(),
-                                 skip=skip, limit=limit)
+async def all_items(
+    skip: int = Query(0, le=100),
+    limit: int = Query(100, le=100),
+    order: Order = Order.desc,
+):
+    images = await Mongo.db.find(
+        ImageModel,
+        sort=getattr(ImageModel.attachment_id, order.value)(),
+        skip=skip,
+        limit=limit,
+    )
     return images
 
 
@@ -32,19 +37,23 @@ async def alias_info(alias: str):
 @router.get("/{alias}/count", response_model=int)
 async def channel_count(alias: str):
     channel = await get_channel(alias)
-    count = await Mongo.db.count(ImageModel,
-                                 ImageModel.channel == channel.id)
+    count = await Mongo.db.count(ImageModel, ImageModel.channel == channel.id)
     return count
 
 
 @router.get("/{alias}/items", response_model=List[ImageModel])
-async def all_items(alias: str,
-                    skip: int = Query(0, le=100),
-                    limit: int = Query(100, le=100),
-                    order: Order = Order.desc):
+async def allias_items(
+    alias: str,
+    skip: int = Query(0, le=100),
+    limit: int = Query(100, le=100),
+    order: Order = Order.desc,
+):
     channel = await get_channel(alias)
-    images = await Mongo.db.find(ImageModel,
-                                 ImageModel.channel == channel.id,
-                                 sort=getattr(ImageModel.attachment_id, order.value)(),
-                                 skip=skip, limit=limit)
+    images = await Mongo.db.find(
+        ImageModel,
+        ImageModel.channel == channel.id,
+        sort=getattr(ImageModel.attachment_id, order.value)(),
+        skip=skip,
+        limit=limit,
+    )
     return images

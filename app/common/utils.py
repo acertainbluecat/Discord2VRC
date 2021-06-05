@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import datetime
 
 from common.database import Mongo
-from common.models import ChannelModel, ImageModel
+from common.models import ChannelModel
 
 
 class Order(str, Enum):
@@ -15,6 +15,7 @@ def get_seed(interval: int, offset: int) -> int:
 
 
 async def get_channel(alias: str) -> ChannelModel:
-    channel = await Mongo.db.find_one(ChannelModel,
-                                      ChannelModel.alias == alias)
+    channel = await Mongo.db.find_one(
+        ChannelModel, ChannelModel.alias == alias
+    )
     return channel

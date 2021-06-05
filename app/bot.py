@@ -3,21 +3,19 @@ import uvloop
 import discord
 import traceback
 
-from os import path
 from typing import List
 
 from discord.ext import commands
-from odmantic import AIOEngine
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from common.config import config
 from common.database import Mongo
 
-class Discord2VRCBot(commands.Bot):
 
+class Discord2VRCBot(commands.Bot):
     def __init__(self, command_prefix: str, owner_ids: List[int]):
-        commands.Bot.__init__(self, command_prefix=command_prefix,
-                              owner_ids=set(owner_ids))
+        commands.Bot.__init__(
+            self, command_prefix=command_prefix, owner_ids=set(owner_ids)
+        )
         Mongo.connect()
         self._setup_cogs()
 
@@ -28,10 +26,10 @@ class Discord2VRCBot(commands.Bot):
                 try:
                     self.load_extension(cog)
                 except (discord.ClientException, ModuleNotFoundError):
-                    print(f'Failed to load cog {cog}.')
+                    print(f"Failed to load cog {cog}.")
                     traceback.print_exc()
 
-    async def on_command_error(self, ctx, error: commands.CommandError):
+    async def on_command_error(self, ctx, error: Exception):
         if isinstance(error, commands.CommandNotFound):
             await ctx.message.delete()
             await ctx.send("Unknown command", delete_after=3)
@@ -39,17 +37,21 @@ class Discord2VRCBot(commands.Bot):
             if ctx.message:
                 try:
                     await ctx.message.delete()
-                except:
+                except discord.NotFound:
                     pass
-            await ctx.send(f'Error: {type(error).__name__} - {error}', delete_after=5)
+            await ctx.send(
+                f"Error: {type(error).__name__} - {error}", delete_after=5
+            )
             raise error
 
     async def on_ready(self):
-        print('Logged on as', self.user)
+        print("Logged on as", self.user)
 
 
 if __name__ == "__main__":
 
     uvloop.install()
-    bot = Discord2VRCBot(command_prefix="!", owner_ids=config["discord"]["owners"])
+    bot = Discord2VRCBot(
+        command_prefix="!", owner_ids=config["discord"]["owners"]
+    )
     bot.run(config["discord"]["token"])

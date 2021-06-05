@@ -13,15 +13,9 @@ app = FastAPI(
     description="Web app for Discord2VRC",
     version="0.0.1",
     openapi_tags=[
-        {
-            "name": "api",
-            "description": "Api endpoints"
-        },
-        {
-            "name": "vrc",
-            "description": "Endpoints for use in vrchat"
-        }
-    ]
+        {"name": "api", "description": "Api endpoints"},
+        {"name": "vrc", "description": "Endpoints for use in vrchat"},
+    ],
 )
 
 app.add_middleware(
@@ -37,7 +31,11 @@ app.add_event_handler("shutdown", Mongo.close)
 app.include_router(api.router, prefix="/api", tags=["api"])
 app.include_router(vrc.router, prefix="/vrc", tags=["vrc"])
 app.include_router(views.router)
-app.mount("/", StaticFiles(directory=config["directories"]["staticdir"]), name="static")
+app.mount(
+    "/",
+    StaticFiles(directory=config["directories"]["staticdir"]),
+    name="static",
+)
 
 if __name__ == "__main__":
 
