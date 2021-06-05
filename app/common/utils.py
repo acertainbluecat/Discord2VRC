@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import datetime
 
 from common.database import Mongo
-from common.models import ChannelModel
+from common.models import ChannelModel, ImageModel
 
 
 class Order(str, Enum):
@@ -19,3 +19,10 @@ async def get_channel(alias: str) -> ChannelModel:
         ChannelModel, ChannelModel.alias == alias
     )
     return channel
+
+
+async def get_image(attachment_id: int) -> ImageModel:
+    image = await Mongo.db.find_one(
+        ImageModel, ImageModel.attachment_id == attachment_id
+    )
+    return image
