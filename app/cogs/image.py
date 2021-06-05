@@ -107,7 +107,7 @@ class ImageCog(commands.Cog, name="Image"):
             return True
         return False
 
-    async def cog_check(self, ctx):
+    async def cog_check(self, ctx) -> bool:
         if ctx.guild is None:
             return False
         return await self.bot.is_owner(ctx.author)

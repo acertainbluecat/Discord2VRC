@@ -1,4 +1,5 @@
 import json
+import discord
 import asyncio
 
 from os import listdir
@@ -11,10 +12,13 @@ class AdminCog(commands.Cog, name="Admin"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    def _cog_name(self, name: str) -> str:
+    def _prefix_cog(self, name: str) -> str:
         if name.startswith("cogs."):
             return name.lower()
         return "cogs." + name.lower()
+
+    def _strip_cog(self, name: str) -> str:
+        return name.lstrip("cogs.")
 
     def enumerate_extensions(self) -> set:
         return {
@@ -35,7 +39,7 @@ class AdminCog(commands.Cog, name="Admin"):
         """Load extension, eg. !load image"""
         await ctx.message.delete()
         try:
-            self.bot.load_extension(self._cog_name(cog))
+            self.bot.load_extension(self._prefix_cog(cog))
         except commands.ExtensionAlreadyLoaded:
             await ctx.send("Extension is already loaded", delete_after=3)
         except commands.ExtensionNotFound:
@@ -50,13 +54,13 @@ class AdminCog(commands.Cog, name="Admin"):
     async def unload(self, ctx, cog: str):
         """Unload extension, eg. !unload image"""
         await ctx.message.delete()
-        if self._cog_name(cog) == "cogs.admin":
+        if self._prefix_cog(cog) == "cogs.admin":
             await ctx.send(
                 "I'm afraid I can't let you do that", delete_after=3
             )
             return
         try:
-            self.bot.unload_extension(self._cog_name(cog))
+            self.bot.unload_extension(self._prefix_cog(cog))
         except commands.ExtensionNotLoaded:
             await ctx.send("No such extension loaded", delete_after=3)
         except Exception as e:
@@ -70,7 +74,7 @@ class AdminCog(commands.Cog, name="Admin"):
         """Reload extension, eg. !reload image"""
         await ctx.message.delete()
         try:
-            self.bot.reload_extension(self._cog_name(cog))
+            self.bot.reload_extension(self._prefix_cog(cog))
         except commands.ExtensionNotLoaded:
             await ctx.send("No such extension loaded", delete_after=3)
         except Exception as e:
@@ -81,9 +85,15 @@ class AdminCog(commands.Cog, name="Admin"):
     @commands.command()
     async def extensions(self, ctx):
         """Shows extensions available and loaded"""
-        loaded = ", ".join(self.bot.cogs)
-        available = ", ".join(self.enumerate_extensions())
-        await ctx.send(f"```Loaded: {loaded}\nAvailable: {available}```")
+        loaded = [self._strip_cog(e) for e in self.bot.extensions]
+        available = self.enumerate_extensions()
+        available = available - set(loaded)
+        embed = discord.Embed()
+        embed.add_field(name="Loaded", value=", ".join(loaded), inline=False)
+        embed.add_field(
+            name="Available", value=", ".join(available), inline=False
+        )
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def ping(self, ctx):
