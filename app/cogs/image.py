@@ -23,7 +23,7 @@ class ImageCog(commands.Cog, name="Image"):
 
     async def _load_channels(self):
         self.channels = {
-            c.channel_id: c async for c in Mongo.db.find(ChannelModel)
+            int(c.channel_id): c async for c in Mongo.db.find(ChannelModel)
         }
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
@@ -53,7 +53,7 @@ class ImageCog(commands.Cog, name="Image"):
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
         image = await Mongo.db.find_one(
-            ImageModel, ImageModel.attachment_id == attachment.id
+            ImageModel, ImageModel.attachment_id == str(attachment.id)
         )
         if image is not None:
             image.deleted = False
