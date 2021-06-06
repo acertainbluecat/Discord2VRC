@@ -55,7 +55,7 @@ async def all_random_image():
     result = await images.aggregate(
         [{"$sample": {"size": 1}}, {"$match": {"deleted": False}}]
     ).to_list(length=1)
-    if len(result) > 0:
+    if result:
         return RedirectImage(result[0]["filepath"])
     return RedirectPlaceholder()
 
@@ -78,7 +78,7 @@ async def channel_random_image(alias: str):
                 },
             ]
         ).to_list(length=1)
-        if len(result) > 0:
+        if result:
             return RedirectImage(result[0]["filepath"])
     return RedirectPlaceholder()
 
