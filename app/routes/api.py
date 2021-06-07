@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 from fastapi import APIRouter, Query
@@ -22,81 +22,33 @@ def NotFoundResponse(message: str = "Not found"):
 
 
 @router.get(
-    "/channel/all",
+    "/image",
     response_model=List[ImageModel],
     responses={404: {"model": NotFoundError}},
 )
-async def get_all_items(
-    skip: int = Query(0, ge=0, le=100),
-    limit: int = Query(100, ge=0, le=100),
-    order: Order = Order.desc,
+async def get_images(
+    alias: Optional[str] = None,
+    skip: Optional[int] = Query(0, ge=0, le=100),
+    limit: Optional[int] = Query(100, ge=0, le=100),
+    order: Optional[Order] = Order.desc,
 ):
-    images = await Mongo.db.find(
-        ImageModel,
-        sort=getattr(ImageModel.attachment_id, order.value)(),
-        skip=skip,
-        limit=limit,
-    )
+    """Retrieves image documents, if alias is not provided
+    will retrieve all images."""
+    query = ()
+    options = {
+        "sort": getattr(ImageModel.attachment_id, order.value)(),
+        "skip": skip,
+        "limit": limit,
+    }
+    if alias:
+        channel = await get_channel(alias)
+        if channel is None:
+            return NotFoundResponse(f'alias "{alias}" does not exist')
+        query = ImageModel.channel == channel.id
+    images = await Mongo.db.find(ImageModel, query, **options)
     if images:
         return images
     return NotFoundResponse("No items found")
-
-
-@router.get(
-    "/channel/{alias}",
-    response_model=List[ImageModel],
-    responses={404: {"model": NotFoundError}},
-)
-async def get_alias_items(
-    alias: str,
-    skip: int = Query(0, ge=0, le=100),
-    limit: int = Query(100, ge=0, le=100),
-    order: Order = Order.desc,
-):
-    channel = await get_channel(alias)
-    if channel is not None:
-        images = await Mongo.db.find(
-            ImageModel,
-            ImageModel.channel == channel.id,
-            sort=getattr(ImageModel.attachment_id, order.value)(),
-            skip=skip,
-            limit=limit,
-        )
-        if images:
-            return images
-        return NotFoundResponse(f'alias "{alias}" has no images')
-    return NotFoundResponse(f'alias "{alias}" does not exist')
-
-
-@router.get("/channel/all/count", response_model=int)
-async def get_all_count():
-    return await Mongo.db.count(ImageModel)
-
-
-@router.get(
-    "/channel/{alias}/count",
-    response_model=int,
-    responses={404: {"model": NotFoundError}},
-)
-async def get_alias_count(alias: str):
-    channel = await get_channel(alias)
-    if channel is not None:
-        return await Mongo.db.count(
-            ImageModel, ImageModel.channel == channel.id
-        )
-    return NotFoundResponse(f'alias "{alias}" does not exist')
-
-
-@router.get(
-    "/channel/{alias}/info",
-    response_model=ChannelModel,
-    responses={404: {"model": NotFoundError}},
-)
-async def get_alias_info(alias: str):
-    channel = await get_channel(alias)
-    if channel is not None:
-        return channel
-    return NotFoundResponse(f'alias "{alias}" does not exist')
 
 
 @router.get(
@@ -104,8 +56,54 @@ async def get_alias_info(alias: str):
     response_model=ImageModel,
     responses={404: {"model": NotFoundError}},
 )
-async def get_image_info(attachment_id: int):
+async def get_image_by_id(attachment_id: str):
+    """Retrieves image document by attachment_id"""
     image = await get_image(attachment_id)
     if image is not None:
         return image
     return NotFoundResponse(f"attachment id {attachment_id} does not exist")
+
+
+@router.get(
+    "/channel",
+    response_model=List[ChannelModel],
+    responses={404: {"model": NotFoundError}},
+)
+async def get_channels():
+    """Retrieves channel documents.
+    Might add guild related filters in future"""
+    channels = await Mongo.db.find(ChannelModel)
+    if channels:
+        return channels
+    return NotFoundResponse("No channels found")
+
+
+@router.get(
+    "/channel/{alias}",
+    response_model=ChannelModel,
+    responses={404: {"model": NotFoundError}},
+)
+async def get_channel_by_alias(alias: str):
+    """retrives channel documents based on alias"""
+    channel = await get_channel(alias)
+    if channel is not None:
+        return channel
+    return NotFoundResponse(f'alias "{alias}" does not exist')
+
+
+@router.get(
+    "/count/image",
+    response_model=int,
+    responses={404: {"model": NotFoundError}},
+)
+async def get_image_count(alias: Optional[str] = None):
+    """Counts number of images, if alias is not provided
+    will count all images"""
+    if alias:
+        channel = await get_channel(alias)
+        if channel is not None:
+            return await Mongo.db.count(
+                ImageModel, ImageModel.channel == channel.id
+            )
+        return NotFoundResponse(f'alias "{alias}" does not exist')
+    return await Mongo.db.count(ImageModel)
