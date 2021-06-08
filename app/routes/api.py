@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+from odmantic.query import QueryExpression
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -31,22 +32,25 @@ async def get_images(
     skip: Optional[int] = Query(0, ge=0, le=100),
     limit: Optional[int] = Query(100, ge=0, le=100),
     order: Optional[Order] = Order.desc,
+    deleted: Optional[bool] = None,
 ):
     """Retrieves image documents, if alias is not provided
     will retrieve all images.
     """
-    query = ()
+    queries: List[QueryExpression] = []
     options = {
         "sort": getattr(ImageModel.attachment_id, order.value)(),
         "skip": skip,
         "limit": limit,
     }
-    if alias:
+    if alias is not None:
         channel = await get_channel(alias)
         if channel is None:
             return NotFoundResponse(f'alias "{alias}" does not exist')
-        query = ImageModel.channel == channel.id
-    images = await Mongo.db.find(ImageModel, query, **options)
+        queries.append[ImageModel.channel == channel.id]
+    if deleted is not None:
+        queries.append(ImageModel.deleted == deleted)
+    images = await Mongo.db.find(ImageModel, *queries, **options)
     if images:
         return images
     return NotFoundResponse("No items found")
@@ -98,15 +102,19 @@ async def get_channel_by_alias(alias: str):
     response_model=int,
     responses={404: {"model": NotFoundError}},
 )
-async def get_image_count(alias: Optional[str] = None):
+async def get_image_count(
+    alias: Optional[str] = None,
+    deleted: Optional[bool] = None,
+):
     """Counts number of images, if alias is not provided
     will count all images
     """
-    if alias:
+    queries: List[QueryExpression] = []
+    if alias is not None:
         channel = await get_channel(alias)
-        if channel is not None:
-            return await Mongo.db.count(
-                ImageModel, ImageModel.channel == channel.id
-            )
-        return NotFoundResponse(f'alias "{alias}" does not exist')
-    return await Mongo.db.count(ImageModel)
+        if channel is None:
+            return NotFoundResponse(f'alias "{alias}" does not exist')
+        queries.append(ImageModel.channel == channel.id)
+    if deleted is not None:
+        queries.append(ImageModel.deleted == deleted)
+    return await Mongo.db.count(ImageModel, *queries)
