@@ -10,7 +10,10 @@ class Mongo:
     db: AIOEngine
 
     @staticmethod
-    def connect():
+    def connect() -> None:
+        """Sets up connection to MongoDB via motor
+        and Odmantic's AIOEngine
+        """
         Mongo.motor = AsyncIOMotorClient(
             "mongodb://{username}:{password}@{host}:{port}/{database}".format(
                 **config["database"]
@@ -21,5 +24,6 @@ class Mongo:
         )
 
     @staticmethod
-    def close():
+    def close() -> None:
+        """Close motor connection to mongodb"""
         Mongo.motor.close()

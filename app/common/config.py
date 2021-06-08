@@ -9,14 +9,19 @@ CONFIG_DIR = "../config.ini"
 
 
 def parse_owners(owners: str) -> List[int]:
+    """Parse owner list from config file"""
     return [int(owner) for owner in owners.split("\n")]
 
 
 def to_dict(cfg: configparser.ConfigParser) -> dict:
+    """Converts ConfigParser object into dictionary"""
     return {s.lower(): dict(cfg[s]) for s in cfg.sections()}
 
 
 def setup_config() -> dict:
+    """Reads config file, and returns dictionary with
+    parsed configuration
+    """
     cfg = configparser.ConfigParser()
     cfg.read(CONFIG_DIR)
     config = to_dict(cfg)

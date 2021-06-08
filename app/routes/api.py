@@ -33,7 +33,8 @@ async def get_images(
     order: Optional[Order] = Order.desc,
 ):
     """Retrieves image documents, if alias is not provided
-    will retrieve all images."""
+    will retrieve all images.
+    """
     query = ()
     options = {
         "sort": getattr(ImageModel.attachment_id, order.value)(),
@@ -71,7 +72,8 @@ async def get_image_by_id(attachment_id: str):
 )
 async def get_channels():
     """Retrieves channel documents.
-    Might add guild related filters in future"""
+    Might add guild related filters in future
+    """
     channels = await Mongo.db.find(ChannelModel)
     if channels:
         return channels
@@ -98,7 +100,8 @@ async def get_channel_by_alias(alias: str):
 )
 async def get_image_count(alias: Optional[str] = None):
     """Counts number of images, if alias is not provided
-    will count all images"""
+    will count all images
+    """
     if alias:
         channel = await get_channel(alias)
         if channel is not None:

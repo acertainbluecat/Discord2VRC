@@ -19,7 +19,10 @@ class Discord2VRCBot(commands.Bot):
         Mongo.connect()
         self._setup_cogs()
 
-    def _setup_cogs(self):
+    def _setup_cogs(self) -> None:
+        """Loads extensions based on what was loaded
+        in previous run
+        """
         with open("cogs/cogs.json") as json_file:
             cogs = json.load(json_file)
             for cog in cogs["loaded"]:
@@ -29,7 +32,7 @@ class Discord2VRCBot(commands.Bot):
                     print(f"Failed to load cog {cog}.")
                     traceback.print_exc()
 
-    async def on_command_error(self, ctx, error: Exception):
+    async def on_command_error(self, ctx, error: Exception) -> None:
         if isinstance(error, commands.CommandNotFound):
             await ctx.message.delete()
             await ctx.send("Unknown command", delete_after=3)
@@ -44,7 +47,7 @@ class Discord2VRCBot(commands.Bot):
             )
             raise error
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         print("Logged on as", self.user)
 
 

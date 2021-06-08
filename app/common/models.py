@@ -3,6 +3,8 @@ from odmantic import Model, Field, Reference
 
 
 class ChannelModel(Model):
+    """Discord channels"""
+
     channel_id: str
     channel_name: str
     alias: str
@@ -12,6 +14,8 @@ class ChannelModel(Model):
 
 
 class ImageModel(Model):
+    """Image attachments from discord"""
+
     filename: str
     filepath: str
     attachment_id: str

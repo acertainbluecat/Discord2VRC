@@ -4,6 +4,7 @@ import asyncio
 
 from os import path
 from PIL import Image
+from typing import Optional
 from discord.ext import commands
 
 from common.config import config
@@ -21,23 +22,27 @@ class ImageCog(commands.Cog, name="Image"):
         self.bot = bot
         asyncio.ensure_future(self._load_channels())
 
-    async def _load_channels(self):
+    async def _load_channels(self) -> None:
+        """Loads channels bot is listening to for images"""
         self.channels = {
             int(c.channel_id): c async for c in Mongo.db.find(ChannelModel)
         }
 
     async def _is_image(self, attachment: discord.Attachment) -> bool:
+        """Check if attachment is an image based on exts"""
         for ext in self.exts:
             if attachment.filename.endswith(ext):
                 return True
         return False
 
     async def _has_attachments(self, message: discord.Message) -> bool:
+        """Check if message has attachments"""
         if len(message.attachments) > 0:
             return True
         return False
 
     async def _handle_attachments(self, message: discord.Message) -> int:
+        """Handle processing of attachments for images"""
         uploaded = 0
         await message.add_reaction(self.emoji["loading"])
         for attachment in message.attachments:
@@ -52,6 +57,7 @@ class ImageCog(commands.Cog, name="Image"):
         return uploaded
 
     async def _upload_exists(self, attachment: discord.Attachment) -> bool:
+        """Check if image in attachment has already been uploaded"""
         image = await Mongo.db.find_one(
             ImageModel, ImageModel.attachment_id == str(attachment.id)
         )
@@ -62,6 +68,7 @@ class ImageCog(commands.Cog, name="Image"):
         return False
 
     async def _alias_exists(self, alias: str) -> bool:
+        """Check if channel alias already exists"""
         channel = await Mongo.db.find_one(
             ChannelModel, ChannelModel.alias == alias
         )
@@ -69,7 +76,8 @@ class ImageCog(commands.Cog, name="Image"):
             return True
         return False
 
-    async def _save_image(self, image_bytes: bytes, filepath: str):
+    async def _save_image(self, image_bytes: bytes, filepath: str) -> None:
+        """Converts image to jpg with q=80 and saves to disk"""
         im = Image.open(io.BytesIO(image_bytes))
         im_jpg = im.convert("RGB")
         im_jpg.save(filepath, quality=80)
@@ -77,6 +85,7 @@ class ImageCog(commands.Cog, name="Image"):
     async def _handle_upload(
         self, message: discord.Message, attachment: discord.Attachment
     ) -> bool:
+        """Handles the upload of image attachments"""
         try:
             filename = str(attachment.id) + ".jpg"
             filepath = path.join(config["directories"]["uploadsdir"], filename)
@@ -108,20 +117,24 @@ class ImageCog(commands.Cog, name="Image"):
         return False
 
     async def cog_check(self, ctx) -> bool:
+        """Discord cog check function"""
         if ctx.guild is None:
             return False
         return await self.bot.is_owner(ctx.author)
 
     def is_subscribed(self, ctx) -> bool:
+        """Checks if channel is subscribed for images"""
         if ctx.channel.id not in self.channels.keys():
             return False
         return self.channels[ctx.channel.id].subscribed
 
     def was_subscribed(self, ctx) -> bool:
+        """Checks if channel was subscribed for images"""
         return ctx.channel.id in self.channels.keys()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
+        """Reads every message in subscribed channels for images"""
         if message.author.id == self.bot.user.id:
             return
         if message.channel.id not in self.channels.keys():
@@ -130,7 +143,7 @@ class ImageCog(commands.Cog, name="Image"):
             await self._handle_attachments(message)
 
     @commands.command()
-    async def rescan(self, ctx, limit: int = 100):
+    async def rescan(self, ctx, limit: Optional[int] = 100) -> None:
         """Rescans current channel for images if it is subscribed"""
         await ctx.message.delete()
         if not self.is_subscribed(ctx):
@@ -157,7 +170,7 @@ class ImageCog(commands.Cog, name="Image"):
             )
 
     @commands.command()
-    async def subscribe(self, ctx, alias: str = None):
+    async def subscribe(self, ctx, alias: Optional[str] = None) -> None:
         """Subscribe current channel for image crawling"""
         await ctx.message.delete()
         if self.is_subscribed(ctx):
@@ -194,7 +207,7 @@ class ImageCog(commands.Cog, name="Image"):
         )
 
     @commands.command()
-    async def unsubscribe(self, ctx):
+    async def unsubscribe(self, ctx) -> None:
         """Unsubscribe current channel for image crawling"""
         await ctx.message.delete()
         if self.is_subscribed(ctx):
@@ -211,7 +224,7 @@ class ImageCog(commands.Cog, name="Image"):
             return
 
     @commands.command()
-    async def alias(self, ctx, alias: str = None):
+    async def alias(self, ctx, alias: Optional[str] = None) -> None:
         """Sets an alias for current channel's subscription"""
         if not self.is_subscribed(ctx):
             return
@@ -238,7 +251,7 @@ class ImageCog(commands.Cog, name="Image"):
         )
 
     @commands.command()
-    async def status(self, ctx):
+    async def status(self, ctx) -> None:
         """Shows current channels subscription status"""
         await ctx.message.delete()
         if not self.is_subscribed(ctx):
@@ -256,7 +269,7 @@ class ImageCog(commands.Cog, name="Image"):
         )
 
     @commands.command()
-    async def purge(self, ctx):
+    async def purge(self, ctx) -> None:
         """Soft deletes all images downloaded from this channel"""
         if not self.was_subscribed(ctx):
             return
@@ -275,9 +288,10 @@ class ImageCog(commands.Cog, name="Image"):
         )
 
     @commands.command()
-    async def reactclear(self, ctx, limit: int = 100):
+    async def reactclear(self, ctx, limit: Optional[int] = 100) -> None:
         """Clear bot reactions from this channel,
-        defaults to last 100 messages"""
+        defaults to last 100 messages
+        """
         async with ctx.channel.typing():
             for message in await ctx.channel.history(limit=limit).flatten():
                 for reaction in message.reactions:

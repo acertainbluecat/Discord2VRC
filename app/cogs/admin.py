@@ -3,6 +3,7 @@ import discord
 import asyncio
 
 from os import listdir
+from typing import Optional
 from discord.ext import commands
 
 
@@ -13,23 +14,28 @@ class AdminCog(commands.Cog, name="Admin"):
         self.bot = bot
 
     def _prefix_cog(self, name: str) -> str:
+        """Prefixes cog names with cog."""
         if name.startswith("cogs."):
             return name.lower()
         return "cogs." + name.lower()
 
     def _strip_cog(self, name: str) -> str:
+        """Strips cog. from cog names"""
         return name.lstrip("cogs.")
 
     def enumerate_extensions(self) -> set:
+        """Enumerate .py files in cogs directory"""
         return {
             f.replace(".py", "") for f in listdir("cogs") if f.endswith(".py")
         }
 
     def save_loaded_extensions(self):
+        """Saves currently loaded extensions for future runs"""
         with open("cogs/cogs.json", "w") as json_file:
             json.dump({"loaded": list(self.bot.extensions.keys())}, json_file)
 
     async def cog_check(self, ctx) -> bool:
+        """discord cog check function"""
         if ctx.guild is None:
             return False
         return await self.bot.is_owner(ctx.author)
@@ -107,9 +113,10 @@ class AdminCog(commands.Cog, name="Admin"):
         await ctx.send("peng!", delete_after=3)
 
     @commands.command()
-    async def clear(self, ctx, limit: int = 100):
+    async def clear(self, ctx, limit: Optional[int] = 100):
         """clear channel of bot messages,
-        defaults to last 100 messages"""
+        defaults to last 100 messages
+        """
         async with ctx.channel.typing():
             for message in await ctx.channel.history(limit=limit).flatten():
                 if message.author.id == self.bot.user.id:

@@ -14,7 +14,7 @@ app = FastAPI(
     version="0.0.1",
     openapi_tags=[
         {"name": "api", "description": "Api endpoints"},
-        {"name": "vrc", "description": "Endpoints for use in vrchat"},
+        {"name": "vrc", "description": "Endpoints for use in VRChat"},
     ],
 )
 

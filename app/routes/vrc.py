@@ -27,7 +27,8 @@ async def all_ordered(
     order: Optional[Order] = Order.desc,
 ):
     """Returns the image based on the index provided and order specified.
-    Defaults to decending order"""
+    Defaults to decending order
+    """
     images = await Mongo.db.find(
         ImageModel,
         ImageModel.deleted == False,
@@ -58,7 +59,8 @@ async def all_random_sync(
     offset: Optional[int] = 0,
 ):
     """Returns a random image that is pseudo synced for all requests
-    based on interval and offset for a seeded rng"""
+    based on interval and offset for a seeded rng
+    """
     count = await Mongo.db.count(ImageModel, ImageModel.deleted == False)
     if count > 0:
         random.seed(get_seed(interval, offset))
@@ -81,12 +83,14 @@ async def channel_ordered(
     order: Optional[Order] = Order.desc,
 ):
     """Returns the image based on the index provided and order specified,
-    and Channel alias. Defaults to decending order"""
+    and Channel alias. Defaults to decending order
+    """
     channel = await get_channel(alias)
     if channel:
         images = await Mongo.db.find(
             ImageModel,
-            (ImageModel.deleted == False) & (ImageModel.channel == channel.id),
+            ImageModel.deleted == False,
+            ImageModel.channel == channel.id,
             sort=getattr(ImageModel.attachment_id, order.value)(),
             skip=index,
             limit=1,
@@ -101,7 +105,8 @@ async def channel_random_image(alias: str):
     """Returns a random image from specified channel alias.
     May not work if channel has less than a certain number
     of images due to how mongodb $sample works.
-    will probably change this in future"""
+    will probably change this in future
+    """
     channel = await get_channel(alias)
     if channel:
         images = Mongo.db.get_collection(ImageModel)
@@ -130,7 +135,8 @@ async def channel_random_sync(
 ):
     """Returns a random image that is pseudo synced for all requests
     based on interval and offset for a seeded rng,
-    from the specified channel alias"""
+    from the specified channel alias
+    """
     channel = await get_channel(alias)
     if channel:
         count = await Mongo.db.count(
@@ -143,8 +149,8 @@ async def channel_random_sync(
             num = random.randint(0, count - 1)
             images = await Mongo.db.find(
                 ImageModel,
-                (ImageModel.deleted == False)
-                & (ImageModel.channel == channel.id),
+                ImageModel.deleted == False,
+                ImageModel.channel == channel.id,
                 sort=ImageModel.created_at.desc(),
                 skip=num,
                 limit=1,
