@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 from datetime import datetime
 
 from common.database import Mongo
@@ -19,7 +20,7 @@ def get_seed(interval: int, offset: int) -> int:
     return int(datetime.now().timestamp() / interval) - (offset * 1000)
 
 
-async def get_channel(alias: str) -> ChannelModel:
+async def get_channel(alias: str) -> Optional[ChannelModel]:
     """Gets channel based on alias"""
     channel = await Mongo.db.find_one(
         ChannelModel, ChannelModel.alias == alias
@@ -27,7 +28,7 @@ async def get_channel(alias: str) -> ChannelModel:
     return channel
 
 
-async def get_image(attachment_id: int) -> ImageModel:
+async def get_image(attachment_id: str) -> Optional[ImageModel]:
     """Gets image based on attachment id"""
     image = await Mongo.db.find_one(
         ImageModel, ImageModel.attachment_id == attachment_id

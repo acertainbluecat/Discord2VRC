@@ -1,6 +1,5 @@
 import random
 from os import path
-from typing import Optional
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Query, Path
@@ -24,7 +23,7 @@ def RedirectImage(filepath: str) -> RedirectResponse:
 @router.get("/all/image/{index}")
 async def all_ordered(
     index: int = Path(..., ge=0),
-    order: Optional[Order] = Order.desc,
+    order: Order = Order.desc,
 ):
     """Returns the image based on the index provided and order specified.
     Defaults to decending order
@@ -55,8 +54,8 @@ async def all_random_image():
 
 @router.get("/all/randomsync")
 async def all_random_sync(
-    interval: Optional[int] = Query(5, ge=5),
-    offset: Optional[int] = 0,
+    interval: int = Query(5, ge=5),
+    offset: int = 0,
 ):
     """Returns a random image that is pseudo synced for all requests
     based on interval and offset for a seeded rng
@@ -68,7 +67,7 @@ async def all_random_sync(
         images = await Mongo.db.find(
             ImageModel,
             ImageModel.deleted == False,
-            sort=ImageModel.attachment_id.desc(),
+            sort=ImageModel.attachment_id.desc(),  # type: ignore[attr-defined]
             skip=num,
             limit=1,
         )
@@ -80,7 +79,7 @@ async def all_random_sync(
 async def channel_ordered(
     alias: str,
     index: int = Path(..., ge=0),
-    order: Optional[Order] = Order.desc,
+    order: Order = Order.desc,
 ):
     """Returns the image based on the index provided and order specified,
     and Channel alias. Defaults to decending order
@@ -130,8 +129,8 @@ async def channel_random_image(alias: str):
 @router.get("/channel/{alias}/randomsync")
 async def channel_random_sync(
     alias: str,
-    interval: Optional[int] = Query(5, ge=5),
-    offset: Optional[int] = 0,
+    interval: int = Query(5, ge=5),
+    offset: int = 0,
 ):
     """Returns a random image that is pseudo synced for all requests
     based on interval and offset for a seeded rng,
@@ -151,7 +150,7 @@ async def channel_random_sync(
                 ImageModel,
                 ImageModel.deleted == False,
                 ImageModel.channel == channel.id,
-                sort=ImageModel.created_at.desc(),
+                sort=ImageModel.created_at.desc(),  # type: ignore[attr-defined]
                 skip=num,
                 limit=1,
             )

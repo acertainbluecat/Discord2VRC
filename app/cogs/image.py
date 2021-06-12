@@ -143,7 +143,7 @@ class ImageCog(commands.Cog, name="Image"):
             await self._handle_attachments(message)
 
     @commands.command()
-    async def rescan(self, ctx, limit: Optional[int] = 100) -> None:
+    async def rescan(self, ctx, limit: int = 100) -> None:
         """Rescans current channel for images if it is subscribed"""
         await ctx.message.delete()
         if not self.is_subscribed(ctx):
@@ -165,9 +165,9 @@ class ImageCog(commands.Cog, name="Image"):
                 await progress.edit(content=f"Progress {current}/{count}")
             await response.delete()
             await progress.delete()
-            await ctx.send(
-                f"Rescan complete, added {uploaded} new images", delete_after=3
-            )
+        await ctx.send(
+            f"Rescan complete, added {uploaded} new images", delete_after=3
+        )
 
     @commands.command()
     async def subscribe(self, ctx, alias: Optional[str] = None) -> None:
@@ -297,8 +297,8 @@ class ImageCog(commands.Cog, name="Image"):
                 for reaction in message.reactions:
                     if reaction.me:
                         await reaction.remove(self.bot.user)
-            await ctx.message.delete()
-            await ctx.send("Reactions cleared!", delete_after=3)
+        await ctx.message.delete()
+        await ctx.send("Reactions cleared!", delete_after=3)
 
 
 def setup(bot):

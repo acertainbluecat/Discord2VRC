@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
-from odmantic.query import QueryExpression
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -29,15 +28,15 @@ def NotFoundResponse(message: str = "Not found"):
 )
 async def get_images(
     alias: Optional[str] = None,
-    skip: Optional[int] = Query(0, ge=0, le=100),
-    limit: Optional[int] = Query(100, ge=0, le=100),
-    order: Optional[Order] = Order.desc,
+    skip: int = Query(0, ge=0, le=100),
+    limit: int = Query(100, ge=0, le=100),
+    order: Order = Order.desc,
     deleted: Optional[bool] = None,
 ):
     """Retrieves image documents, if alias is not provided
     will retrieve all images.
     """
-    queries: List[QueryExpression] = []
+    queries: List = []
     options = {
         "sort": getattr(ImageModel.attachment_id, order.value)(),
         "skip": skip,
@@ -47,7 +46,7 @@ async def get_images(
         channel = await get_channel(alias)
         if channel is None:
             return NotFoundResponse(f'alias "{alias}" does not exist')
-        queries.append[ImageModel.channel == channel.id]
+        queries.append(ImageModel.channel == channel.id)
     if deleted is not None:
         queries.append(ImageModel.deleted == deleted)
     images = await Mongo.db.find(ImageModel, *queries, **options)
@@ -109,7 +108,7 @@ async def get_image_count(
     """Counts number of images, if alias is not provided
     will count all images
     """
-    queries: List[QueryExpression] = []
+    queries: List = []
     if alias is not None:
         channel = await get_channel(alias)
         if channel is None:

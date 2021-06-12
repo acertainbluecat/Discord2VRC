@@ -29,7 +29,7 @@ class AdminCog(commands.Cog, name="Admin"):
             f.replace(".py", "") for f in listdir("cogs") if f.endswith(".py")
         }
 
-    def save_loaded_extensions(self):
+    def save_loaded_extensions(self) -> None:
         """Saves currently loaded extensions for future runs"""
         with open("cogs/cogs.json", "w") as json_file:
             json.dump({"loaded": list(self.bot.extensions.keys())}, json_file)
@@ -41,7 +41,7 @@ class AdminCog(commands.Cog, name="Admin"):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
-    async def load(self, ctx, cog: str):
+    async def load(self, ctx, cog: str) -> None:
         """Load extension, eg. !load image"""
         await ctx.message.delete()
         try:
@@ -57,7 +57,7 @@ class AdminCog(commands.Cog, name="Admin"):
             await ctx.send(f"loaded {cog} successfully", delete_after=3)
 
     @commands.command()
-    async def unload(self, ctx, cog: str):
+    async def unload(self, ctx, cog: str) -> None:
         """Unload extension, eg. !unload image"""
         await ctx.message.delete()
         if self._prefix_cog(cog) == "cogs.admin":
@@ -76,7 +76,7 @@ class AdminCog(commands.Cog, name="Admin"):
             await ctx.send(f"{cog} unloaded successfully", delete_after=3)
 
     @commands.command()
-    async def reload(self, ctx, cog: str):
+    async def reload(self, ctx, cog: str) -> None:
         """Reload extension, eg. !reload image"""
         await ctx.message.delete()
         try:
@@ -89,7 +89,7 @@ class AdminCog(commands.Cog, name="Admin"):
             await ctx.send(f"{cog} reloaded successfully", delete_after=3)
 
     @commands.command()
-    async def extensions(self, ctx):
+    async def extensions(self, ctx) -> None:
         """Shows extensions available and loaded"""
         loaded = [self._strip_cog(e) for e in self.bot.extensions]
         available = self.enumerate_extensions()
@@ -102,18 +102,18 @@ class AdminCog(commands.Cog, name="Admin"):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def ping(self, ctx):
+    async def ping(self, ctx) -> None:
         """Ping!"""
         await ctx.message.delete()
         await ctx.send("pong!", delete_after=3)
 
     @commands.command(hidden=True)
-    async def pong(self, ctx):
+    async def pong(self, ctx) -> None:
         await ctx.message.delete()
         await ctx.send("peng!", delete_after=3)
 
     @commands.command()
-    async def clear(self, ctx, limit: Optional[int] = 100):
+    async def clear(self, ctx, limit: Optional[int] = 100) -> None:
         """clear channel of bot messages,
         defaults to last 100 messages
         """
@@ -121,11 +121,11 @@ class AdminCog(commands.Cog, name="Admin"):
             for message in await ctx.channel.history(limit=limit).flatten():
                 if message.author.id == self.bot.user.id:
                     await message.delete()
-            await ctx.message.delete()
-            await ctx.send("Messages cleared!", delete_after=3)
+        await ctx.message.delete()
+        await ctx.send("Messages cleared!", delete_after=3)
 
     @commands.command()
-    async def quit(self, ctx):
+    async def quit(self, ctx) -> None:
         """Tells bot to quit"""
         await ctx.message.delete()
         message = await ctx.send("bye!")
