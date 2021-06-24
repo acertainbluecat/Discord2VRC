@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+from bson.objectid import ObjectId
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -28,8 +29,8 @@ def NotFoundResponse(message: str = "Not found"):
 )
 async def get_images(
     alias: Optional[str] = None,
-    skip: int = Query(0, ge=0, le=100),
-    limit: int = Query(100, ge=0, le=100),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=0),
     order: Order = Order.desc,
     deleted: Optional[bool] = None,
 ):
@@ -52,6 +53,47 @@ async def get_images(
     images = await Mongo.db.find(ImageModel, *queries, **options)
     if images:
         return images
+    return NotFoundResponse("No items found")
+
+
+@router.get(
+    "/randomimage",
+    response_model=List[ImageModel],
+    responses={404: {"model": NotFoundError}},
+)
+async def get_random_images(
+    alias: Optional[str] = None,
+    limit: int = Query(100, ge=0),
+    deleted: Optional[bool] = None,
+):
+    """Retrieves randomized list of image documents"""
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "channel",
+                "localField": "channel",
+                "foreignField": "_id",
+                "as": "channel",
+            }
+        },
+        {"$unwind": {"path": "$channel"}},
+        {"$sample": {"size": limit}},
+    ]
+    match = []
+    if alias is not None:
+        channel = await get_channel(alias)
+        if channel is None:
+            return NotFoundResponse(f'alias "{alias}" does not exist')
+        match.append(("channel", ObjectId(channel.id)))
+    if deleted is not None:
+        match.append(("deleted", deleted))
+
+    images = Mongo.db.get_collection(ImageModel)
+    if match:
+        pipeline.insert(0, {"$match": {k: v for k, v in match}})
+    result = await images.aggregate(pipeline).to_list(length=limit)
+    if result:
+        return [ImageModel.parse_doc(doc) for doc in result]
     return NotFoundResponse("No items found")
 
 
