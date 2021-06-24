@@ -45,7 +45,7 @@ async def all_random_image():
     """Returns a random image"""
     images = Mongo.db.get_collection(ImageModel)
     result = await images.aggregate(
-        [{"$sample": {"size": 1}}, {"$match": {"deleted": False}}]
+        [{"$match": {"deleted": False}}, {"$sample": {"size": 1}}]
     ).to_list(length=1)
     if result:
         return RedirectImage(result[0]["filepath"])
@@ -101,24 +101,20 @@ async def channel_ordered(
 
 @router.get("/channel/{alias}/random")
 async def channel_random_image(alias: str):
-    """Returns a random image from specified channel alias.
-    May not work if channel has less than a certain number
-    of images due to how mongodb $sample works.
-    will probably change this in future
-    """
+    """Returns a random image from specified channel alias."""
     channel = await get_channel(alias)
     if channel:
         images = Mongo.db.get_collection(ImageModel)
         # $sample size must be less than 5% of total doc size
         result = await images.aggregate(
             [
-                {"$sample": {"size": 1}},
                 {
                     "$match": {
                         "channel": ObjectId(channel.id),
                         "deleted": False,
                     }
                 },
+                {"$sample": {"size": 1}},
             ]
         ).to_list(length=1)
         if result:
