@@ -1,5 +1,4 @@
 import json
-import uvloop
 import discord
 import traceback
 
@@ -33,7 +32,9 @@ class Discord2VRCBot(commands.Bot):
                     traceback.print_exc()
 
     async def on_command_error(self, ctx, error: Exception) -> None:
-        if isinstance(error, commands.CommandNotFound):
+        if isinstance(error, discord.NotFound):
+            pass
+        elif isinstance(error, commands.CommandNotFound):
             await ctx.message.delete()
             await ctx.send("Unknown command", delete_after=3)
         elif isinstance(error, commands.CommandInvokeError):
@@ -45,7 +46,6 @@ class Discord2VRCBot(commands.Bot):
             await ctx.send(
                 f"Error: {type(error).__name__} - {error}", delete_after=5
             )
-            raise error
 
     async def on_ready(self) -> None:
         print("Logged on as", self.user)
@@ -53,8 +53,14 @@ class Discord2VRCBot(commands.Bot):
 
 if __name__ == "__main__":
 
-    uvloop.install()
+    try:
+        import uvloop
+    except (ImportError, ModuleNotFoundError):
+        pass
+    else:
+        uvloop.install()
     bot = Discord2VRCBot(
-        command_prefix="!", owner_ids=config["discord"]["owners"]
+        command_prefix=config["discord"]["prefix"],
+        owner_ids=config["discord"]["owners"],
     )
     bot.run(config["discord"]["token"])
