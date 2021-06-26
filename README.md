@@ -1,13 +1,19 @@
 # Discord2VRC
 
 A simple Discord bot and a web server that allows you to load images that have been uploaded to select discord channels into VRChat worlds directly. 
-As this was primarily a project I started for personal use, the way it has been set up is mainly catered to what was convenient for me, which may not neccessarily be the case for others. I may not have used the best practices for the sake of convenience, so keep that in mind if you are interested in using this. This is only for SDK2 worlds for now until Udon receives support for loading remote images. 
+
+As this was primarily a project I started for personal use, the way it has been set up is mainly catered to what was convenient for me, which may not neccessarily be the case for others. I may not have used the best practices for the sake of convenience, so keep that in mind if you are interested in using this. 
+
+If you're looking for a simple drag and drop prefab please be aware that this is not one of them and requires some technical knowledge as well as your own server to set this up on.
+
+This is only for SDK2 worlds for now until Udon receives support for loading remote images. 
 
 ![demo](https://nyanpa.su/i/rC6o1rMW.gif)
 
 # Web server 
 
 API Documentation: https://discord2vrc.nyanpa.su/docs
+
 Feel free to play around with the sample web app I have set up above to see how the web end points work. 
 There are 2 channel "aliases" set up "vrchat" and "ffxiv".
 
@@ -17,7 +23,7 @@ That means reloading the image in vrchat should show the same random image to ev
 # Discord bot
 
 Commands are as follows
-```md
+```
 Admin:
   clear       clear channel of bot messages,
   extensions  Shows extensions available and loaded
@@ -34,7 +40,7 @@ Image:
   status      Shows current channels subscription status
   subscribe   Subscribe current channel for image crawling
   unsubscribe Unsubscribe current channel for image crawling
-​No Category:
+No Category:
   help        Shows this message
 
 Type !help command for more info on a command.
