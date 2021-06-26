@@ -85,7 +85,7 @@ async def channel_ordered(
     and Channel alias. Defaults to decending order
     """
     channel = await get_channel(alias)
-    if channel:
+    if channel is not None:
         images = await Mongo.db.find(
             ImageModel,
             ImageModel.deleted == False,
@@ -103,9 +103,8 @@ async def channel_ordered(
 async def channel_random_image(alias: str):
     """Returns a random image from specified channel alias."""
     channel = await get_channel(alias)
-    if channel:
+    if channel is not None:
         images = Mongo.db.get_collection(ImageModel)
-        # $sample size must be less than 5% of total doc size
         result = await images.aggregate(
             [
                 {
@@ -133,7 +132,7 @@ async def channel_random_sync(
     from the specified channel alias
     """
     channel = await get_channel(alias)
-    if channel:
+    if channel is not None:
         count = await Mongo.db.count(
             ImageModel,
             ImageModel.deleted == False,

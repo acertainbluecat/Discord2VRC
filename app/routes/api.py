@@ -51,7 +51,7 @@ async def get_images(
     if deleted is not None:
         queries.append(ImageModel.deleted == deleted)
     images = await Mongo.db.find(ImageModel, *queries, **options)
-    if images:
+    if images is not None:
         return images
     return NotFoundResponse("No items found")
 
@@ -92,7 +92,7 @@ async def get_random_images(
     if match:
         pipeline.insert(0, {"$match": {k: v for k, v in match}})
     result = await images.aggregate(pipeline).to_list(length=limit)
-    if result:
+    if result is not None:
         return [ImageModel.parse_doc(doc) for doc in result]
     return NotFoundResponse("No items found")
 
@@ -120,7 +120,7 @@ async def get_channels():
     Might add guild related filters in future
     """
     channels = await Mongo.db.find(ChannelModel)
-    if channels:
+    if channels is not None:
         return channels
     return NotFoundResponse("No channels found")
 
