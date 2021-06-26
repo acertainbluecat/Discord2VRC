@@ -22,6 +22,9 @@ That means reloading the image in vrchat should show the same random image to ev
 
 # Discord bot
 
+The bot is currently configured to only listen to owners defined in config.ini.
+I may in future add a simple ACL to replace this instead.
+
 Commands are as follows
 ```
 Admin:
