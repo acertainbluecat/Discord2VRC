@@ -122,11 +122,11 @@ class ImageCog(commands.Cog, name="Image"):
             return False
         return await self.bot.is_owner(ctx.author)
 
-    def is_subscribed(self, ctx) -> bool:
+    def is_subscribed(self, channel_id: int) -> bool:
         """Checks if channel is subscribed for images"""
-        if ctx.channel.id not in self.channels.keys():
-            return False
-        return self.channels[ctx.channel.id].subscribed
+        if channel_id in self.channels.keys():
+            return self.channels[channel_id].subscribed
+        return False
 
     def was_subscribed(self, ctx) -> bool:
         """Checks if channel was subscribed for images"""
@@ -137,16 +137,15 @@ class ImageCog(commands.Cog, name="Image"):
         """Reads every message in subscribed channels for images"""
         if message.author.id == self.bot.user.id:
             return
-        if message.channel.id not in self.channels.keys():
-            return
-        if await self._has_attachments(message):
-            await self._handle_attachments(message)
+        if self.is_subscribed(message.channel.id):
+            if await self._has_attachments(message):
+                await self._handle_attachments(message)
 
     @commands.command()
     async def rescan(self, ctx, limit: int = 100) -> None:
         """Rescans current channel for images if it is subscribed"""
         await ctx.message.delete()
-        if not self.is_subscribed(ctx):
+        if not self.is_subscribed(ctx.channel.id):
             await ctx.send("This channel is not subscribed!", delete_after=3)
             return
         async with ctx.channel.typing():
@@ -173,7 +172,7 @@ class ImageCog(commands.Cog, name="Image"):
     async def subscribe(self, ctx, alias: Optional[str] = None) -> None:
         """Subscribe current channel for image crawling"""
         await ctx.message.delete()
-        if self.is_subscribed(ctx):
+        if self.is_subscribed(ctx.channel.id):
             await ctx.send(
                 "This channel is already subscribed!", delete_after=3
             )
@@ -210,7 +209,7 @@ class ImageCog(commands.Cog, name="Image"):
     async def unsubscribe(self, ctx) -> None:
         """Unsubscribe current channel for image crawling"""
         await ctx.message.delete()
-        if self.is_subscribed(ctx):
+        if self.is_subscribed(ctx.channel.id):
             channel = self.channels[ctx.channel.id]
             channel.subscribed = False
             channel.alias = str(channel.id)
@@ -226,7 +225,7 @@ class ImageCog(commands.Cog, name="Image"):
     @commands.command()
     async def alias(self, ctx, alias: Optional[str] = None) -> None:
         """Sets an alias for current channel's subscription"""
-        if not self.is_subscribed(ctx):
+        if not self.is_subscribed(ctx.channel.id):
             return
         await ctx.message.delete()
         if alias is None:
@@ -254,7 +253,7 @@ class ImageCog(commands.Cog, name="Image"):
     async def status(self, ctx) -> None:
         """Shows current channels subscription status"""
         await ctx.message.delete()
-        if not self.is_subscribed(ctx):
+        if not self.is_subscribed(ctx.channel.id):
             await ctx.send("This channel is not subscribed", delete_after=3)
             return
         channel = self.channels[ctx.channel.id]
