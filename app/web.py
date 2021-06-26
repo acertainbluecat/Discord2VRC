@@ -11,7 +11,7 @@ from routes import api, vrc, views
 app = FastAPI(
     title="Discord2VRC",
     description="Web app for Discord2VRC",
-    version="0.0.1",
+    version="1.0.0",
     openapi_tags=[
         {"name": "api", "description": "Api endpoints"},
         {"name": "vrc", "description": "Endpoints for use in VRChat"},
