@@ -51,6 +51,7 @@ Use help on specific commands for more information
 # Requirements
 
 MongoDB
+
 Python 3.7+
   - [Discord.py](https://github.com/Rapptz/discord.py)
   - [FastAPI](https://github.com/tiangolo/fastapi)
