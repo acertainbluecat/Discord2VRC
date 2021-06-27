@@ -1,5 +1,5 @@
 discord.py==1.7.2
-fastapi==0.65.1
+fastapi==0.65.2
 aiofiles==0.7.0
 odmantic==0.3.5
 uvicorn==0.14.0
