@@ -42,6 +42,8 @@ Fill up config.ini with the relevant information before running
 ```bash
 python3 migrate.py
 ```
+Create a placeholder.png and put it in your static dir or use the one from app/static (Used to display when VRC endpoints return a 404)
+
 Start the bot and web server
 ```bash
 python3 bot.py
