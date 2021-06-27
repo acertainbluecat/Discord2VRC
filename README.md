@@ -87,7 +87,7 @@ API Documentation: https://discord2vrc.nyanpa.su/docs
 
 Feel free to play around with the sample web app I have set up above to see how the web end points work. There are 2 channel "aliases" set up "vrchat" and "ffxiv".
 
-The VRC endpoints are to be used for vrchat and will return a single image. They can be used with vrc_panorama on sdk2 to load images dynamically as they are uploaded by respawning the vrc_panorama to reload them. As the endpoints redirect instead of returning images directly, there shouldnt be an issue with caching.
+The VRC endpoints are to be used for vrchat and will return a single image. They can be used with vrc_panorama on sdk2 to load images dynamically as they are reloaded by respawning the vrc_panorama prefab. As the endpoints redirect instead of returning images directly, there shouldnt be an issue with caching.
 
 Of note, the randomsync endpoints will return a random image using the current server time based on intervals. That means reloading the image in vrchat should show the same random image to everyone in the instance as long as they load it at the same time for the most part. 
 
