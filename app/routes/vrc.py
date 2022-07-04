@@ -94,7 +94,7 @@ async def channel_ordered(
             skip=index,
             limit=1,
         )
-        if images is not None:
+        if images:
             return RedirectImage(images[0].filepath)
     return RedirectPlaceholder()
 
